@@ -3,12 +3,21 @@ import 'package:flutter/services.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:pemuda_baik/src/config/color_style.dart';
 import 'package:pemuda_baik/src/config/size_config.dart';
+import 'package:pemuda_baik/src/models/user_model.dart';
 import 'package:pemuda_baik/src/pages/master/kecamatan_page.dart';
 import 'package:pemuda_baik/src/pages/master/kelurahan_page.dart';
+import 'package:pemuda_baik/src/pages/master/pekerjaan_page.dart';
+import 'package:pemuda_baik/src/pages/master/pendidikan_page.dart';
+import 'package:pemuda_baik/src/pages/master/pengguna_page.dart';
 import 'package:pemuda_baik/src/pages/widget/input_form_widget.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({Key? key}) : super(key: key);
+  const ProfilePage({
+    Key? key,
+    required this.user,
+  }) : super(key: key);
+
+  final User user;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -22,7 +31,7 @@ class _ProfilePageState extends State<ProfilePage> {
         return Padding(
           padding:
               EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: const FormEditProfilWidget(),
+          child: FormEditProfilWidget(data: widget.user),
         );
       },
     );
@@ -114,7 +123,8 @@ class _ProfilePageState extends State<ProfilePage> {
             height: 0.0,
           ),
           ListTile(
-            onTap: () {},
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const PekerjaanPage())),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 0.0, vertical: 12.0),
             title: const Text('Master Pekerjaan'),
@@ -124,10 +134,19 @@ class _ProfilePageState extends State<ProfilePage> {
             height: 0.0,
           ),
           ListTile(
-            onTap: () {},
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const PendidikanPage())),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 0.0, vertical: 12.0),
             title: const Text('Master Pendidikan'),
+            trailing: const Icon(Icons.keyboard_arrow_right),
+          ),
+          ListTile(
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const PenggunaPage())),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 0.0, vertical: 12.0),
+            title: const Text('Master Pengguna'),
             trailing: const Icon(Icons.keyboard_arrow_right),
           ),
           ListTile(
@@ -146,7 +165,10 @@ class _ProfilePageState extends State<ProfilePage> {
 class FormEditProfilWidget extends StatefulWidget {
   const FormEditProfilWidget({
     Key? key,
+    this.data,
   }) : super(key: key);
+
+  final User? data;
 
   @override
   State<FormEditProfilWidget> createState() => _FormEditProfilWidgetState();
@@ -174,6 +196,13 @@ class _FormEditProfilWidgetState extends State<FormEditProfilWidget> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _nama.text = widget.data!.name!;
+    _email.text = widget.data!.email!;
+  }
+
+  @override
   void dispose() {
     _nama.dispose();
     _email.dispose();
@@ -185,7 +214,7 @@ class _FormEditProfilWidgetState extends State<FormEditProfilWidget> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: SizeConfig.blockSizeVertical * 70,
+      height: SizeConfig.blockSizeVertical * 75,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -198,8 +227,12 @@ class _FormEditProfilWidgetState extends State<FormEditProfilWidget> {
           ),
           Expanded(
             child: ListView(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 22.0, horizontal: 22),
+              padding: const EdgeInsets.only(
+                left: 22.0,
+                right: 22,
+                bottom: 22.0,
+                top: 12.0,
+              ),
               children: [
                 const Text('Nama'),
                 const SizedBox(
@@ -259,10 +292,12 @@ class _FormEditProfilWidgetState extends State<FormEditProfilWidget> {
                   child: ElevatedButton(
                     onPressed: () {},
                     style: ElevatedButton.styleFrom(
-                        primary: kSecondaryColor,
-                        onPrimary: Colors.black,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.0))),
+                      primary: kSecondaryColor,
+                      onPrimary: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                    ),
                     child: const Text('Update'),
                   ),
                 )

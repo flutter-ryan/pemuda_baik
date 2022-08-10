@@ -12,6 +12,8 @@ class InputFormWidget extends StatelessWidget {
     this.readOnly = false,
     this.onTap,
     this.textCapitalization = TextCapitalization.none,
+    this.validate = true,
+    this.textInputAction = TextInputAction.done,
   }) : super(key: key);
 
   final TextEditingController? controller;
@@ -23,6 +25,8 @@ class InputFormWidget extends StatelessWidget {
   final bool readOnly;
   final VoidCallback? onTap;
   final TextCapitalization textCapitalization;
+  final bool validate;
+  final TextInputAction textInputAction;
 
   @override
   Widget build(BuildContext context) {
@@ -41,15 +45,18 @@ class InputFormWidget extends StatelessWidget {
         hintText: hint,
         suffixIcon: suffixicon,
       ),
-      validator: (val) {
-        if (val!.isEmpty) {
-          return 'Input required';
-        }
-        return null;
-      },
+      validator: validate
+          ? (val) {
+              if (val!.isEmpty) {
+                return 'Input required';
+              }
+              return null;
+            }
+          : null,
       textCapitalization: textCapitalization,
       keyboardType: keyType,
       onTap: onTap,
+      textInputAction: textInputAction,
     );
   }
 }

@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
 import 'package:intl/intl.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:pemuda_baik/src/blocs/pemuda_bloc.dart';
+import 'package:pemuda_baik/src/blocs/pemuda_save_bloc.dart';
 import 'package:pemuda_baik/src/config/color_style.dart';
+import 'package:pemuda_baik/src/config/size_config.dart';
 import 'package:pemuda_baik/src/models/pemuda_model.dart';
+import 'package:pemuda_baik/src/models/save_pemuda_model.dart';
 import 'package:pemuda_baik/src/pages/input_pemuda_page.dart';
+import 'package:pemuda_baik/src/pages/widget/confirm_dialog.dart';
+import 'package:pemuda_baik/src/pages/widget/error_box.dart';
+import 'package:pemuda_baik/src/pages/widget/error_dialog.dart';
+import 'package:pemuda_baik/src/pages/widget/loading_dialog.dart';
+import 'package:pemuda_baik/src/pages/widget/search_input_widget.dart';
+import 'package:pemuda_baik/src/pages/widget/success_dialog.dart';
 import 'package:pemuda_baik/src/repositories/responseApi/api_response.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent-tab-view.dart';
 
@@ -20,6 +31,7 @@ class _DatapageState extends State<Datapage> {
   final PemudaBloc _pemudaBloc = PemudaBloc();
   final ScrollController _scrollController = ScrollController();
   bool _show = true;
+  List<Pemuda> _pemuda = [];
 
   @override
   void initState() {
@@ -32,6 +44,21 @@ class _DatapageState extends State<Datapage> {
     setState(() {
       _show = _scrollController.position.userScrollDirection ==
           ScrollDirection.forward;
+    });
+  }
+
+  void _inputPemudaForm() {
+    pushNewScreen(
+      context,
+      screen: const InputPemudaPage(),
+      withNavBar: false,
+    ).then((value) {
+      if (value != null) {
+        var pemuda = value as Pemuda;
+        setState(() {
+          _pemuda.insert(0, pemuda);
+        });
+      }
     });
   }
 
@@ -54,17 +81,21 @@ class _DatapageState extends State<Datapage> {
         appBar: AppBar(
           backgroundColor: kPrimaryDarkColor,
           title: const Text('Data Pemuda'),
-          centerTitle: true,
+          actions: [
+            IconButton(
+              onPressed: () {
+                _pemudaBloc.getPemuda();
+                setState(() {});
+              },
+              icon: const Icon(Icons.refresh_rounded),
+            )
+          ],
         ),
         floatingActionButton: Visibility(
           visible: _show,
           child: FloatingActionButton(
             heroTag: 'inputPemuda',
-            onPressed: () => pushNewScreen(
-              context,
-              screen: const InputPemudaPage(),
-              withNavBar: false,
-            ),
+            onPressed: _inputPemudaForm,
             backgroundColor: kPrimaryDarkColor,
             child: const Icon(Icons.add_rounded),
           ),
@@ -94,31 +125,20 @@ class _DatapageState extends State<Datapage> {
                 ),
               );
             case Status.error:
-              return Padding(
-                padding: const EdgeInsets.all(22.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.warning_rounded,
-                      size: 52,
-                      color: Colors.red,
-                    ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    Text(
-                      snapshot.data!.message,
-                      style:
-                          const TextStyle(color: Colors.grey, fontSize: 16.0),
-                      textAlign: TextAlign.center,
-                    )
-                  ],
+              return Center(
+                child: Errorbox(
+                  message: snapshot.data!.message,
+                  button: true,
+                  onTap: () {
+                    _pemudaBloc.getPemuda();
+                    setState(() {});
+                  },
                 ),
               );
             case Status.completed:
+              _pemuda = snapshot.data!.data!.pemuda!;
               return ListPemudaWidget(
-                data: snapshot.data!.data!.pemuda!,
+                data: _pemuda,
                 scrollController: _scrollController,
               );
           }
@@ -143,6 +163,7 @@ class ListPemudaWidget extends StatefulWidget {
 
 class _ListPemudaWidgetState extends State<ListPemudaWidget>
     with AutomaticKeepAliveClientMixin {
+  final PemudaSaveBloc _pemudaSaveBloc = PemudaSaveBloc();
   final _filter = TextEditingController();
   List<Pemuda> _data = [];
   final DateFormat _tanggal = DateFormat('dd MMMM yyyy', 'id');
@@ -166,47 +187,90 @@ class _ListPemudaWidgetState extends State<ListPemudaWidget>
     setState(() {});
   }
 
+  void _detailPemuda(Pemuda data) {
+    showBarModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      builder: (context) {
+        return Container(
+          width: double.infinity,
+          constraints: BoxConstraints(
+            maxHeight: SizeConfig.blockSizeVertical * 82,
+          ),
+          child: _detailPemudaWidget(data),
+        );
+      },
+    );
+  }
+
+  void _deletePemuda(int? id) {
+    if (id != null) {
+      showAnimatedDialog(
+        context: context,
+        builder: (context) {
+          return ConfirmDialog(
+            message: 'Anda yakin menghapus data ini?',
+            onConfirm: () => Navigator.pop(context, 'delete'),
+          );
+        },
+        animationType: DialogTransitionType.slideFromBottomFade,
+        duration: const Duration(milliseconds: 500),
+      ).then((value) {
+        if (value != null) {
+          _pemudaSaveBloc.idSink.add(id);
+          _pemudaSaveBloc.deletePemuda();
+          _showStreamDelete();
+        }
+      });
+    }
+  }
+
+  void _showStreamDelete() {
+    showAnimatedDialog(
+      context: context,
+      builder: (context) {
+        return _streamDelete();
+      },
+      animationType: DialogTransitionType.slideFromBottomFade,
+      duration: const Duration(milliseconds: 500),
+    ).then((value) {
+      if (value != null) {
+        var data = value as Pemuda;
+        _data.removeWhere((e) => e.id == data.id);
+        setState(() {});
+      }
+    });
+  }
+
   @override
   void dispose() {
     _filter.dispose();
+    _pemudaSaveBloc.dispose();
     super.dispose();
   }
 
   @override
+  void didUpdateWidget(covariant ListPemudaWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.data != widget.data) {
+      setState(() {
+        _data = widget.data;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    SizeConfig().init(context);
     super.build(context);
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 15.0),
-          child: TextField(
+          child: SearchInputWidget(
             controller: _filter,
-            decoration: InputDecoration(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 18.0, vertical: 15),
-              fillColor: Colors.white,
-              filled: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4.0),
-                borderSide: BorderSide(color: Colors.grey[400]!),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4.0),
-                borderSide: BorderSide(color: Colors.grey[400]!),
-              ),
-              hintText: 'Pencarian nama pemuda',
-              hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: _filter.text.isEmpty
-                  ? null
-                  : IconButton(
-                      onPressed: () => _filter.clear(),
-                      icon: const Icon(
-                        Icons.close_rounded,
-                        size: 22.0,
-                      ),
-                    ),
-            ),
+            hint: 'Pencarian nama pemuda',
+            onClear: () => _filter.clear(),
           ),
         ),
         if (_data.isEmpty)
@@ -243,7 +307,7 @@ class _ListPemudaWidgetState extends State<ListPemudaWidget>
                       vertical: 22.0, horizontal: 18.0),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(8.0),
+                    borderRadius: BorderRadius.circular(12.0),
                     boxShadow: const [
                       BoxShadow(
                         color: Colors.black12,
@@ -255,44 +319,77 @@ class _ListPemudaWidgetState extends State<ListPemudaWidget>
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (pemuda.agama == 'Islam' && pemuda.jenisKelamin == 2)
-                        Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(4.0),
-                              image: const DecorationImage(
-                                image: AssetImage('images/female.jpg'),
-                                fit: BoxFit.cover,
-                              )),
-                        )
-                      else if (pemuda.agama != 'Islam' &&
-                          pemuda.jenisKelamin == 2)
-                        Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(4.0),
-                              image: const DecorationImage(
-                                image: AssetImage('images/female2.jpeg'),
-                                fit: BoxFit.cover,
-                              )),
-                        )
-                      else
-                        Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(4.0),
-                            image: const DecorationImage(
-                              image: AssetImage('images/male.jpg'),
-                              fit: BoxFit.cover,
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (pemuda.agama == 'Islam' &&
+                              pemuda.jenisKelamin == 'Perempuan')
+                            Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(12.0),
+                                image: const DecorationImage(
+                                  image: AssetImage('images/female.jpg'),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            )
+                          else if (pemuda.agama != 'Islam' &&
+                              pemuda.jenisKelamin == 'Perempuan')
+                            Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(12.0),
+                                  image: const DecorationImage(
+                                    image: AssetImage('images/female2.jpeg'),
+                                    fit: BoxFit.cover,
+                                  )),
+                            )
+                          else
+                            Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(12.0),
+                                  image: const DecorationImage(
+                                    image: AssetImage('images/male.jpg'),
+                                    fit: BoxFit.cover,
+                                  ),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                        color: Colors.black12,
+                                        offset: Offset(2.0, 2.0),
+                                        blurRadius: 12.0)
+                                  ]),
                             ),
+                          const SizedBox(
+                            height: 15.0,
                           ),
-                        ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                onPressed: () => _deletePemuda(pemuda.id),
+                                color: Colors.red,
+                                icon: const Icon(Icons.delete),
+                              ),
+                              const SizedBox(
+                                width: 8.0,
+                              ),
+                              IconButton(
+                                onPressed: () => _detailPemuda(pemuda),
+                                color: Colors.blue,
+                                icon: const Icon(Icons.info_outline_rounded),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                       const SizedBox(
                         width: 18.0,
                       ),
@@ -310,47 +407,6 @@ class _ListPemudaWidgetState extends State<ListPemudaWidget>
                             TileIdentitas(
                               title: "Nama",
                               subtitle: '${pemuda.nama}',
-                            ),
-                            const SizedBox(
-                              height: 4.0,
-                            ),
-                            TileIdentitas(
-                              title: "Tanggal Lahir",
-                              subtitle: _tanggal.format(pemuda.tanggalLahir!),
-                            ),
-                            const SizedBox(
-                              height: 4.0,
-                            ),
-                            TileIdentitas(
-                              title: "Agama",
-                              subtitle: '${pemuda.agama}',
-                            ),
-                            const SizedBox(
-                              height: 4.0,
-                            ),
-                            TileIdentitas(
-                              title: "Jenis kelamin",
-                              subtitle: pemuda.jenisKelamin == 1
-                                  ? 'Laki-laki'
-                                  : 'Perempuan',
-                            ),
-                            const SizedBox(
-                              height: 4.0,
-                            ),
-                            TileIdentitas(
-                              title: "Status Pernikahan",
-                              subtitle: pemuda.statusNikah == 1
-                                  ? 'Nikah'
-                                  : 'Belum nikah',
-                            ),
-                            const SizedBox(
-                              height: 4.0,
-                            ),
-                            TileIdentitas(
-                              title: "Status Pekerjaan",
-                              subtitle: pemuda.statusNikah == 1
-                                  ? 'Bekerja'
-                                  : 'Belum bekerja',
                             ),
                             const SizedBox(
                               height: 4.0,
@@ -382,6 +438,128 @@ class _ListPemudaWidgetState extends State<ListPemudaWidget>
     );
   }
 
+  Widget _detailPemudaWidget(Pemuda data) {
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 32),
+      children: [
+        const Text(
+          'Identitas Pemuda',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        ),
+        const Divider(
+          height: 42.0,
+        ),
+        TileIdentitas(
+          title: "NIK",
+          subtitle: '${data.nomorKtp}',
+        ),
+        const SizedBox(
+          height: 8.0,
+        ),
+        TileIdentitas(
+          title: "Nama",
+          subtitle: '${data.nama}',
+        ),
+        const SizedBox(
+          height: 8.0,
+        ),
+        TileIdentitas(
+          title: "Tanggal Lahir",
+          subtitle: _tanggal.format(data.tanggalLahir!),
+        ),
+        const SizedBox(
+          height: 8.0,
+        ),
+        TileIdentitas(
+          title: "Jenis Kelamin",
+          subtitle: "${data.jenisKelamin}",
+        ),
+        const SizedBox(
+          height: 8.0,
+        ),
+        TileIdentitas(
+          title: "Status",
+          subtitle: "${data.statusNikah}",
+        ),
+        const SizedBox(
+          height: 8.0,
+        ),
+        TileIdentitas(
+          title: "Agama",
+          subtitle: "${data.agama}",
+        ),
+        const SizedBox(
+          height: 8.0,
+        ),
+        TileIdentitas(
+          title: "Alamat",
+          subtitle: "${data.alamat}",
+        ),
+        const SizedBox(
+          height: 8.0,
+        ),
+        TileIdentitas(
+          title: "Pendidikan Terakhir",
+          subtitle: "${data.pendidikan!.namaPendidikan}",
+        ),
+        const SizedBox(
+          height: 8.0,
+        ),
+        TileIdentitas(
+          title: "Pekerjaan",
+          subtitle: "${data.pekerjaan!.namaPekerjaan}",
+        ),
+        const SizedBox(
+          height: 8.0,
+        ),
+        TileIdentitas(
+          title: "Nomor Hp",
+          subtitle: '${data.nomorKontak}',
+        ),
+        const SizedBox(
+          height: 8.0,
+        ),
+        TileIdentitas(
+          title: "Kecamatan",
+          subtitle: '${data.kecamatan!.namaKecamatan}',
+        ),
+        const SizedBox(
+          height: 8.0,
+        ),
+        TileIdentitas(
+          title: "Kelurahan",
+          subtitle: '${data.kelurahan!.namaKelurahan}',
+        ),
+      ],
+    );
+  }
+
+  Widget _streamDelete() {
+    return StreamBuilder<ApiResponse<ResponseSavePemudaModel>>(
+      stream: _pemudaSaveBloc.savePemudaStream,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          switch (snapshot.data!.status) {
+            case Status.loading:
+              return LoadingDialog(
+                message: snapshot.data!.message,
+              );
+            case Status.error:
+              return ErrorDialog(
+                message: snapshot.data!.message,
+              );
+            case Status.completed:
+              return SuccessDialog(
+                message: snapshot.data!.data!.message,
+                onTap: () => Navigator.pop(context, snapshot.data!.data!.data),
+              );
+          }
+        }
+        return const SizedBox();
+      },
+    );
+  }
+
   @override
   bool get wantKeepAlive => true;
 }
@@ -398,15 +576,14 @@ class TileIdentitas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      direction: Axis.vertical,
-      spacing: 2.0,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
           style: const TextStyle(fontSize: 13, color: Colors.grey),
         ),
-        Text(subtitle),
+        Text(subtitle)
       ],
     );
   }

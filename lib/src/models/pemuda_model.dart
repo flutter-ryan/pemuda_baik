@@ -1,3 +1,8 @@
+import 'package:pemuda_baik/src/models/master_kecamatan_model.dart';
+import 'package:pemuda_baik/src/models/master_kelurahan_model.dart';
+import 'package:pemuda_baik/src/models/master_pekerjaan_model.dart';
+import 'package:pemuda_baik/src/models/master_pendidikan_model.dart';
+
 PemudaModel pemudaModelFromJson(dynamic str) => PemudaModel.fromJson(str);
 
 class PemudaModel {
@@ -23,24 +28,28 @@ class Pemuda {
     this.tanggalLahir,
     this.jenisKelamin,
     this.statusNikah,
-    this.pendidikanTerakhir,
-    this.pekerjaan,
+    this.agama,
     this.alamat,
     this.nomorKontak,
-    this.agama,
+    this.pekerjaan,
+    this.pendidikan,
+    this.kecamatan,
+    this.kelurahan,
   });
 
   int? id;
   String? nomorKtp;
   String? nama;
   DateTime? tanggalLahir;
-  int? jenisKelamin;
-  int? statusNikah;
-  String? pendidikanTerakhir;
-  String? pekerjaan;
+  String? jenisKelamin;
+  String? statusNikah;
+  String? agama;
   String? alamat;
   String? nomorKontak;
-  String? agama;
+  Pekerjaan? pekerjaan;
+  Pendidikan? pendidikan;
+  Kecamatan? kecamatan;
+  Kelurahan? kelurahan;
 
   factory Pemuda.fromJson(Map<String, dynamic> json) => Pemuda(
         id: json["id"],
@@ -49,10 +58,20 @@ class Pemuda {
         tanggalLahir: DateTime.parse(json["tanggal_lahir"]),
         jenisKelamin: json["jenis_kelamin"],
         statusNikah: json["status_nikah"],
-        pendidikanTerakhir: json["pendidikan_terakhir"],
-        pekerjaan: json["pekerjaan"],
+        agama: json["agama"],
         alamat: json["alamat"],
         nomorKontak: json["nomor_kontak"],
-        agama: json["agama"],
+        pekerjaan: json["pekerjaan"] == null
+            ? null
+            : Pekerjaan.fromJson(json["pekerjaan"]),
+        pendidikan: json["pendidikan"] == null
+            ? null
+            : Pendidikan.fromJson(json["pendidikan"]),
+        kecamatan: json["kecamatan"] == null
+            ? null
+            : Kecamatan.fromJson(json["kecamatan"]),
+        kelurahan: json["kelurahan"] == null
+            ? null
+            : Kelurahan.fromJson(json["kelurahan"]),
       );
 }

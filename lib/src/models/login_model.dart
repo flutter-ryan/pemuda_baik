@@ -25,16 +25,16 @@ class ResponseLoginModel {
     this.user,
   });
 
-  User? user;
+  LoginUser? user;
 
   factory ResponseLoginModel.fromJson(Map<String, dynamic> json) =>
       ResponseLoginModel(
-        user: User.fromJson(json["data"]),
+        user: LoginUser.fromJson(json["data"]),
       );
 }
 
-class User {
-  User({
+class LoginUser {
+  LoginUser({
     this.id,
     this.token,
     this.name,
@@ -46,7 +46,7 @@ class User {
   String? name;
   int? role;
 
-  factory User.fromJson(Map<String, dynamic> json) => User(
+  factory LoginUser.fromJson(Map<String, dynamic> json) => LoginUser(
         id: json["id"],
         token: json["token"],
         name: json["name"],

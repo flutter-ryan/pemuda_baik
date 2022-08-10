@@ -1,10 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:pemuda_baik/src/blocs/pemuda_save_bloc.dart';
 import 'package:pemuda_baik/src/config/color_style.dart';
-import 'package:pemuda_baik/src/models/response_model.dart';
+import 'package:pemuda_baik/src/config/size_config.dart';
+import 'package:pemuda_baik/src/models/master_kecamatan_model.dart';
+import 'package:pemuda_baik/src/models/master_kelurahan_model.dart';
+import 'package:pemuda_baik/src/models/master_pekerjaan_model.dart';
+import 'package:pemuda_baik/src/models/master_pendidikan_model.dart';
+import 'package:pemuda_baik/src/models/pemuda_model.dart';
+import 'package:pemuda_baik/src/models/save_pemuda_model.dart';
+import 'package:pemuda_baik/src/pages/widget/list_kecamatan_widget.dart';
+import 'package:pemuda_baik/src/pages/widget/list_kelurahan_widget.dart';
+import 'package:pemuda_baik/src/pages/widget/list_pekerjaan_widget.dart';
+import 'package:pemuda_baik/src/pages/widget/list_penddidkan_widget.dart';
 import 'package:pemuda_baik/src/repositories/responseApi/api_response.dart';
 import 'package:pemuda_baik/src/pages/widget/input_form_widget.dart';
 import 'package:pemuda_baik/src/pages/widget/loading_dialog_widget.dart';
@@ -21,11 +33,17 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
   final _nik = TextEditingController();
   final _nama = TextEditingController();
   final _tanggalLahir = TextEditingController();
+  final _kecamatan = TextEditingController();
+  final _kelurahan = TextEditingController();
   final _pendidkanTerakhir = TextEditingController();
   final _pekerjaan = TextEditingController();
   final _alamat = TextEditingController();
   final _nomorHp = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  int? selectedPendidikan;
+  int? selectedPekerjaan;
+  int? selectedKecamatan;
+  int? selectedKelurahan;
   int? selectedRadioTile;
   int? selectedRadioTileNikah;
   int? selectedRadioTilePekerjaan;
@@ -49,11 +67,13 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
       _pemudaSaveBloc.tanggalLahirSink.add(_tanggalLahir.text);
       _pemudaSaveBloc.jenisKelaminSink.add(selectedRadioTile!);
       _pemudaSaveBloc.statusNikahSink.add(selectedRadioTileNikah!);
-      _pemudaSaveBloc.pekerjaanSink.add(selectedRadioTilePekerjaan!);
+      _pemudaSaveBloc.pekerjaanSink.add(selectedPekerjaan!);
       _pemudaSaveBloc.agamaSink.add(selectedRadioTileAgama!);
-      _pemudaSaveBloc.pendidikanTerakhirSink.add(_pendidkanTerakhir.text);
+      _pemudaSaveBloc.pendidikanTerakhirSink.add(selectedPendidikan!);
       _pemudaSaveBloc.alamatSink.add(_alamat.text);
       _pemudaSaveBloc.nomorHpSink.add(_nomorHp.text);
+      _pemudaSaveBloc.kelurahanSink.add(selectedKelurahan!);
+      _pemudaSaveBloc.kecamatanSink.add(selectedKecamatan!);
       _pemudaSaveBloc.savePemuda();
       showAnimatedDialog(
         context: context,
@@ -64,18 +84,8 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
         duration: const Duration(milliseconds: 300),
       ).then((value) {
         if (value != null) {
-          _nik.clear();
-          _nama.clear();
-          _tanggalLahir.clear();
-          _pendidkanTerakhir.clear();
-          _pekerjaan.clear();
-          _alamat.clear();
-          _nomorHp.clear();
-          setState(() {
-            selectedRadioTile = null;
-            selectedRadioTileNikah = null;
-            selectedRadioTilePekerjaan = null;
-          });
+          var data = value as Pemuda;
+          Navigator.pop(context, data);
         }
       });
     }
@@ -114,6 +124,130 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
     });
   }
 
+  void _showPendidikan() {
+    showBarModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: Container(
+            width: double.infinity,
+            constraints: BoxConstraints(
+              maxHeight: SizeConfig.blockSizeVertical * 72,
+            ),
+            child: ListPendidikanWidget(
+              selected: selectedPendidikan,
+            ),
+          ),
+        );
+      },
+    ).then((value) {
+      if (value != null) {
+        var data = value as Pendidikan;
+        setState(() {
+          _pendidkanTerakhir.text = data.namaPendidikan!;
+          selectedPendidikan = data.id;
+        });
+      }
+    });
+  }
+
+  void _showPekerjaan() {
+    showBarModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: Container(
+            width: double.infinity,
+            constraints: BoxConstraints(
+              maxHeight: SizeConfig.blockSizeVertical * 72,
+            ),
+            child: ListPekerjaanWidget(
+              selected: selectedPekerjaan,
+            ),
+          ),
+        );
+      },
+    ).then((value) {
+      if (value != null) {
+        var data = value as Pekerjaan;
+        setState(() {
+          _pekerjaan.text = data.namaPekerjaan!;
+          selectedPekerjaan = data.id;
+        });
+      }
+    });
+  }
+
+  void _showKecamatan() {
+    showBarModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Container(
+            width: double.infinity,
+            constraints:
+                BoxConstraints(maxHeight: SizeConfig.blockSizeVertical * 72),
+            child: ListKecamatanWidget(selected: selectedKecamatan),
+          ),
+        );
+      },
+    ).then((value) {
+      if (value != null) {
+        var data = value as Kecamatan;
+        setState(() {
+          selectedKecamatan = data.id;
+          _kecamatan.text = data.namaKecamatan!;
+        });
+      }
+    });
+  }
+
+  void _showKelurahan() {
+    if (selectedKecamatan != null) {
+      showBarModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return Padding(
+            padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom),
+            child: Container(
+              width: double.infinity,
+              constraints:
+                  BoxConstraints(maxHeight: SizeConfig.blockSizeVertical * 72),
+              child: ListKelurahanWidget(
+                  selected: selectedKelurahan, idKecamatan: selectedKecamatan!),
+            ),
+          );
+        },
+      ).then((value) {
+        if (value != null) {
+          var data = value as Kelurahan;
+          setState(() {
+            selectedKelurahan = data.id;
+            _kelurahan.text = data.namaKelurahan!;
+          });
+        }
+      });
+    } else {
+      Fluttertoast.showToast(
+        msg: "Anda belum memilih kecamatan",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+    }
+  }
+
   @override
   void dispose() {
     _pemudaSaveBloc.dispose();
@@ -129,6 +263,7 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
 
   @override
   Widget build(BuildContext context) {
+    SizeConfig().init(context);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -163,7 +298,7 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
             const SizedBox(
               height: 22.0,
             ),
-            const Text('Tangga Lahir'),
+            const Text('Tanggal Lahir'),
             const SizedBox(
               height: 10.0,
             ),
@@ -282,6 +417,62 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
                       value: 2,
                       groupValue: selectedRadioTileNikah,
                       title: const Text("Belum Nikah"),
+                      onChanged: (val) {
+                        setState(() {
+                          selectedRadioTileNikah = val as int;
+                        });
+                      },
+                      activeColor: Colors.black,
+                    ),
+                  ),
+                )
+              ],
+            ),
+            const SizedBox(
+              height: 18.0,
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(8.0),
+                      border: Border.all(width: 0.3, color: Colors.grey),
+                    ),
+                    child: RadioListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      value: 3,
+                      groupValue: selectedRadioTileNikah,
+                      title: const Text("Duda"),
+                      onChanged: (val) {
+                        setState(() {
+                          selectedRadioTileNikah = val as int;
+                        });
+                      },
+                      activeColor: Colors.black,
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  width: 18.0,
+                ),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(8.0),
+                      border: Border.all(width: 0.3, color: Colors.grey),
+                    ),
+                    child: RadioListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      value: 4,
+                      groupValue: selectedRadioTileNikah,
+                      title: const Text("Janda"),
                       onChanged: (val) {
                         setState(() {
                           selectedRadioTileNikah = val as int;
@@ -448,74 +639,30 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
             const SizedBox(
               height: 22.0,
             ),
-            const Text('Status Pekerjaan'),
-            const SizedBox(
-              height: 10.0,
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      borderRadius: BorderRadius.circular(8.0),
-                      border: Border.all(width: 0.3, color: Colors.grey),
-                    ),
-                    child: RadioListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      value: 1,
-                      groupValue: selectedRadioTilePekerjaan,
-                      title: const Text("Bekerja"),
-                      onChanged: (val) {
-                        setState(() {
-                          selectedRadioTilePekerjaan = val as int;
-                        });
-                      },
-                      activeColor: Colors.black,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  width: 18.0,
-                ),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      borderRadius: BorderRadius.circular(8.0),
-                      border: Border.all(width: 0.3, color: Colors.grey),
-                    ),
-                    child: RadioListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      value: 2,
-                      groupValue: selectedRadioTilePekerjaan,
-                      title: const Text("Belum Bekerja"),
-                      onChanged: (val) {
-                        setState(() {
-                          selectedRadioTilePekerjaan = val as int;
-                        });
-                      },
-                      activeColor: Colors.black,
-                    ),
-                  ),
-                )
-              ],
-            ),
-            const SizedBox(
-              height: 22.0,
-            ),
             const Text('Pendidikan Terakhir'),
             const SizedBox(
               height: 10.0,
             ),
             InputFormWidget(
               controller: _pendidkanTerakhir,
+              readOnly: true,
               hint: 'Ketikkan Pendidikan Terakhir',
               textCapitalization: TextCapitalization.words,
+              onTap: _showPendidikan,
+            ),
+            const SizedBox(
+              height: 22.0,
+            ),
+            const Text('Pekerjaan'),
+            const SizedBox(
+              height: 10.0,
+            ),
+            InputFormWidget(
+              controller: _pekerjaan,
+              hint: 'Ketikkan Pekerjaan',
+              readOnly: true,
+              textCapitalization: TextCapitalization.words,
+              onTap: _showPekerjaan,
             ),
             const SizedBox(
               height: 22.0,
@@ -532,8 +679,8 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.0),
                 ),
-                hintText: 'Ketikkan isi artikel',
-                hintStyle: const TextStyle(color: Colors.grey),
+                hintText: 'Ketikkan alamat lengkap sesuai identitas',
+                hintStyle: const TextStyle(color: Colors.grey, fontSize: 14.0),
               ),
               validator: (val) {
                 if (val!.isEmpty) {
@@ -558,6 +705,34 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
               keyType: TextInputType.number,
             ),
             const SizedBox(
+              height: 22.0,
+            ),
+            const Text('Kecamatan'),
+            const SizedBox(
+              height: 10.0,
+            ),
+            InputFormWidget(
+              controller: _kecamatan,
+              readOnly: true,
+              hint: 'Ketikkan Kecamatan',
+              textCapitalization: TextCapitalization.words,
+              onTap: _showKecamatan,
+            ),
+            const SizedBox(
+              height: 22.0,
+            ),
+            const Text('Kelurahan/Desa'),
+            const SizedBox(
+              height: 10.0,
+            ),
+            InputFormWidget(
+              controller: _kelurahan,
+              readOnly: true,
+              hint: 'Ketikkan Kelurahan',
+              textCapitalization: TextCapitalization.words,
+              onTap: _showKelurahan,
+            ),
+            const SizedBox(
               height: 52.0,
             ),
             SizedBox(
@@ -579,7 +754,7 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
   }
 
   Widget _streamSavePemuda() {
-    return StreamBuilder<ApiResponse<ResponseModel>>(
+    return StreamBuilder<ApiResponse<ResponseSavePemudaModel>>(
       stream: _pemudaSaveBloc.savePemudaStream,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
@@ -605,7 +780,8 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
                 content: Text('${snapshot.data!.data!.message}'),
                 actions: [
                   TextButton(
-                    onPressed: () => Navigator.pop(context, 'reload'),
+                    onPressed: () =>
+                        Navigator.pop(context, snapshot.data!.data!.data),
                     child: const Text('Tutup'),
                   ),
                 ],

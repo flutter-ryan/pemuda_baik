@@ -84,7 +84,7 @@ class _KecamatanPageState extends State<KecamatanPage> {
             _data[_data.indexWhere((e) => e.id == data.id)] = data;
           } else {
             var data = value as Kecamatan;
-            _data.add(data);
+            _data.insert(0, data);
           }
         }
         setState(() {});

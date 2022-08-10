@@ -38,7 +38,7 @@ class Artikel {
         judul: json["judul"],
         penulis: json["penulis"],
         artikel: json["artikel"],
-        urlImg: json["url_img"],
+        urlImg: json["url"],
         createdAt: DateTime.parse(json["created_at"]),
       );
 }

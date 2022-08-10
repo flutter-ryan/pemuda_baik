@@ -9,6 +9,7 @@ class PemudaBloc {
   StreamController<ApiResponse<PemudaModel>>? _streamPemuda;
   StreamSink<ApiResponse<PemudaModel>> get pemudaSink => _streamPemuda!.sink;
   Stream<ApiResponse<PemudaModel>> get pemudaStream => _streamPemuda!.stream;
+
   Future<void> getPemuda() async {
     _streamPemuda = StreamController();
     pemudaSink.add(ApiResponse.loading('Memuat...'));

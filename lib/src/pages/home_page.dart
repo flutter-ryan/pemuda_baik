@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pemuda_baik/src/blocs/auth_bloc.dart';
+import 'package:pemuda_baik/src/blocs/user_bloc.dart';
 import 'package:pemuda_baik/src/config/color_style.dart';
+import 'package:pemuda_baik/src/models/user_model.dart';
+import 'package:pemuda_baik/src/pages/kecamatan_chart.dart';
+import 'package:pemuda_baik/src/pages/kelurahan_chart.dart';
+import 'package:pemuda_baik/src/pages/pekerjaan_chart.dart';
+import 'package:pemuda_baik/src/pages/pendidikan_chart.dart';
 import 'package:pemuda_baik/src/pages/profile_page.dart';
+import 'package:pemuda_baik/src/pages/widget/error_box.dart';
+import 'package:pemuda_baik/src/repositories/responseApi/api_response.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent-tab-view.dart';
-import 'package:pie_chart/pie_chart.dart';
+import 'package:shimmer/shimmer.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({Key? key}) : super(key: key);
@@ -14,33 +22,19 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
-  Map<String, double> dataMap = {
-    "Laki-laki": 110,
-    "Perempuan": 90,
-  };
-  Map<String, double> dataMapPengangguran = {
-    "Bekerja": 120,
-    "Belum Bekerja": 80,
-  };
-  Map<String, double> dataMapStatus = {
-    "Nikah": 50,
-    "Belum Menikah": 150,
-  };
+  final UserBloc _userBloc = UserBloc();
 
-  List<Color> colorList = [
-    Colors.red,
-    Colors.blue,
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _userBloc.getUser();
+  }
 
-  List<Color> colorListPengangguran = [
-    Colors.green,
-    Colors.orange,
-  ];
-
-  List<Color> colorListStatus = [
-    kPrimaryColor,
-    kRedColor,
-  ];
+  @override
+  void dispose() {
+    _userBloc.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,13 +49,112 @@ class _HomepageState extends State<Homepage> {
         body: Column(
           children: [
             Container(
+              width: double.infinity,
               color: kPrimaryDarkColor,
               padding: EdgeInsets.only(
                   left: 18.0,
                   right: 18.0,
                   top: MediaQuery.of(context).padding.top + 18,
                   bottom: 18.0),
-              child: Row(
+              child: _streamUser(),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(
+                    vertical: 22.0, horizontal: 15.0),
+                children: const [
+                  PendidikanChart(),
+                  SizedBox(
+                    height: 18.0,
+                  ),
+                  PekerjaanChart(),
+                  SizedBox(
+                    height: 18.0,
+                  ),
+                  KecamatanChart(),
+                  SizedBox(
+                    height: 18.0,
+                  ),
+                  KelurahanChart(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _streamUser() {
+    return StreamBuilder<ApiResponse<UserModel>>(
+      stream: _userBloc.userStream,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          switch (snapshot.data!.status) {
+            case Status.loading:
+              return Row(
+                children: [
+                  CircleAvatar(
+                    radius: 25,
+                    child: Shimmer.fromColors(
+                      baseColor: Colors.grey[300]!,
+                      highlightColor: Colors.white,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey,
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: ListTile(
+                      title: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.white,
+                          child: Container(
+                            width: 200,
+                            height: 15,
+                            decoration: BoxDecoration(
+                              color: Colors.grey,
+                              borderRadius: BorderRadius.circular(22.0),
+                            ),
+                          ),
+                        ),
+                      ),
+                      subtitle: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.white,
+                          child: Container(
+                            width: 100,
+                            height: 12,
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(22.0)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            case Status.error:
+              return Center(
+                child: Errorbox(
+                    message: snapshot.data!.message,
+                    button: true,
+                    onTap: () {
+                      _userBloc.getUser();
+                      setState(() {});
+                    }),
+              );
+            case Status.completed:
+              var user = snapshot.data!.data!.user;
+              return Row(
                 children: [
                   const CircleAvatar(
                     radius: 25,
@@ -69,22 +162,25 @@ class _HomepageState extends State<Homepage> {
                   ),
                   Expanded(
                     child: ListTile(
-                      title: const Text(
-                        'Nama Pengguna',
-                        style: TextStyle(
+                      title: Text(
+                        '${user!.name}',
+                        style: const TextStyle(
                             fontSize: 18.0,
                             fontWeight: FontWeight.w600,
                             color: Colors.white),
                       ),
                       subtitle: Text(
-                        'Administrator',
+                        user.role == 1 ? 'Administrator' : 'Petugas',
                         style: TextStyle(color: Colors.grey[100]),
                       ),
                     ),
                   ),
                   IconButton(
                     onPressed: () => pushNewScreen(context,
-                            screen: const ProfilePage(), withNavBar: false)
+                            screen: ProfilePage(
+                              user: user,
+                            ),
+                            withNavBar: false)
                         .then((value) {
                       if (value != null) {
                         var data = value as String;
@@ -99,139 +195,11 @@ class _HomepageState extends State<Homepage> {
                     ),
                   )
                 ],
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(
-                    vertical: 32.0, horizontal: 15.0),
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 18.0),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12.0),
-                      color: Colors.white,
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 12,
-                          offset: Offset(2.0, 2.0),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 18.0),
-                          child: Text(
-                            'Persentase Jumlah Pemuda',
-                            style: TextStyle(
-                                fontSize: 18.0, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 22.0,
-                        ),
-                        PieChart(
-                          dataMap: dataMap,
-                          animationDuration: const Duration(milliseconds: 800),
-                          chartLegendSpacing: 32,
-                          chartRadius: MediaQuery.of(context).size.width / 2.5,
-                          colorList: colorList,
-                          initialAngleInDegree: 0,
-                          chartType: ChartType.disc,
-                          ringStrokeWidth: 32,
-                          legendOptions: const LegendOptions(
-                            showLegendsInRow: false,
-                            legendPosition: LegendPosition.right,
-                            showLegends: true,
-                            legendShape: BoxShape.rectangle,
-                            legendTextStyle: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          chartValuesOptions: const ChartValuesOptions(
-                            showChartValueBackground: true,
-                            showChartValues: true,
-                            showChartValuesInPercentage: false,
-                            showChartValuesOutside: false,
-                            decimalPlaces: 1,
-                          ),
-                          // gradientList: ---To add gradient colors---
-                          // emptyColorGradient: ---Empty Color gradient---
-                        ),
-                        const SizedBox(
-                          height: 32,
-                        ),
-                        PieChart(
-                          dataMap: dataMapPengangguran,
-                          animationDuration: const Duration(milliseconds: 800),
-                          chartLegendSpacing: 32,
-                          chartRadius: MediaQuery.of(context).size.width / 2.5,
-                          colorList: colorListPengangguran,
-                          initialAngleInDegree: 0,
-                          chartType: ChartType.disc,
-                          ringStrokeWidth: 32,
-                          legendOptions: const LegendOptions(
-                            showLegendsInRow: false,
-                            legendPosition: LegendPosition.right,
-                            showLegends: true,
-                            legendShape: BoxShape.rectangle,
-                            legendTextStyle: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          chartValuesOptions: const ChartValuesOptions(
-                            showChartValueBackground: true,
-                            showChartValues: true,
-                            showChartValuesInPercentage: false,
-                            showChartValuesOutside: false,
-                            decimalPlaces: 1,
-                          ),
-                          // gradientList: ---To add gradient colors---
-                          // emptyColorGradient: ---Empty Color gradient---
-                        ),
-                        const SizedBox(
-                          height: 32,
-                        ),
-                        PieChart(
-                          dataMap: dataMapStatus,
-                          animationDuration: const Duration(milliseconds: 800),
-                          chartLegendSpacing: 32,
-                          chartRadius: MediaQuery.of(context).size.width / 2.5,
-                          colorList: colorListStatus,
-                          initialAngleInDegree: 0,
-                          chartType: ChartType.disc,
-                          ringStrokeWidth: 32,
-                          legendOptions: const LegendOptions(
-                            showLegendsInRow: false,
-                            legendPosition: LegendPosition.right,
-                            showLegends: true,
-                            legendShape: BoxShape.rectangle,
-                            legendTextStyle: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          chartValuesOptions: const ChartValuesOptions(
-                            showChartValueBackground: true,
-                            showChartValues: true,
-                            showChartValuesInPercentage: false,
-                            showChartValuesOutside: false,
-                            decimalPlaces: 1,
-                          ),
-                          // gradientList: ---To add gradient colors---
-                          // emptyColorGradient: ---Empty Color gradient---
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+              );
+          }
+        }
+        return const SizedBox();
+      },
     );
   }
 }

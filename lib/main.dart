@@ -2,8 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pemuda_baik/src/config/color_style.dart';
-import 'package:pemuda_baik/src/pages/root_page.dart';
 import 'package:pemuda_baik/src/pages/splash_page.dart';
 
 void main() {

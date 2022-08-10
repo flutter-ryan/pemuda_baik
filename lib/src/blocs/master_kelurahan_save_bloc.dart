@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:pemuda_baik/src/models/master_kecamatan_save_model.dart';
 import 'package:pemuda_baik/src/models/master_kelurahan_save_model.dart';
 import 'package:pemuda_baik/src/repositories/master_kelurahan_save_repo.dart';
 import 'package:pemuda_baik/src/repositories/master_kelurahan_update_repo.dart';

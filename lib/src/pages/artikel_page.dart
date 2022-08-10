@@ -4,6 +4,8 @@ import 'package:pemuda_baik/src/blocs/artikel_bloc.dart';
 import 'package:pemuda_baik/src/config/color_style.dart';
 import 'package:pemuda_baik/src/models/artikel_model.dart';
 import 'package:pemuda_baik/src/pages/input_artikel_page.dart';
+import 'package:pemuda_baik/src/pages/widget/error_box.dart';
+import 'package:pemuda_baik/src/pages/widget/image_net_widget.dart';
 import 'package:pemuda_baik/src/repositories/responseApi/api_response.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent-tab-view.dart';
 
@@ -16,6 +18,7 @@ class ArtikelPage extends StatefulWidget {
 
 class _ArtikelPageState extends State<ArtikelPage> {
   final ArtikelBloc _artikelBloc = ArtikelBloc();
+  List<Artikel> _data = [];
 
   @override
   void initState() {
@@ -35,13 +38,31 @@ class _ArtikelPageState extends State<ArtikelPage> {
       appBar: AppBar(
         title: const Text('Artikel Daerah'),
         backgroundColor: kPrimaryDarkColor,
-        centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: () {
+              _artikelBloc.getArtikel();
+              setState(() {});
+            },
+            icon: const Icon(Icons.refresh_rounded),
+          )
+        ],
       ),
       body: _streamArtikel(),
       floatingActionButton: FloatingActionButton(
         heroTag: 'inputArtikel',
-        onPressed: () => pushNewScreen(context,
-            screen: const InputArtikelPage(), withNavBar: false),
+        onPressed: () => pushNewScreen(
+          context,
+          screen: const InputArtikelPage(),
+          withNavBar: false,
+        ).then((value) {
+          if (value != null) {
+            var data = value as Artikel;
+            setState(() {
+              _data.insert(0, data);
+            });
+          }
+        }),
         backgroundColor: kPrimaryDarkColor,
         child: const Icon(Icons.add),
       ),
@@ -60,24 +81,19 @@ class _ArtikelPageState extends State<ArtikelPage> {
               );
             case Status.error:
               return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.warning_rounded,
-                      color: Colors.red,
-                      size: 52,
-                    ),
-                    const SizedBox(
-                      height: 12.0,
-                    ),
-                    Text(snapshot.data!.message)
-                  ],
+                child: Errorbox(
+                  message: snapshot.data!.message,
+                  button: true,
+                  onTap: () {
+                    _artikelBloc.getArtikel();
+                    setState(() {});
+                  },
                 ),
               );
             case Status.completed:
+              _data = snapshot.data!.data!.artikel!;
               return ListArtikelWidget(
-                data: snapshot.data!.data!.artikel!,
+                data: _data,
               );
           }
         }
@@ -129,6 +145,9 @@ class _ListArtikelWidgetState extends State<ListArtikelWidget> {
       itemBuilder: (context, i) {
         var artikel = _data[i];
         return Container(
+          constraints: const BoxConstraints(
+            maxHeight: 130,
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(8.0),
@@ -141,42 +160,90 @@ class _ListArtikelWidgetState extends State<ListArtikelWidget> {
             ],
           ),
           child: InkWell(
-            onTap: () {},
+            onTap: () => pushNewScreen(
+              context,
+              screen: InputArtikelPage(data: artikel),
+              withNavBar: false,
+            ).then((value) {
+              if (value != null) {
+                var data = value as Artikel;
+                setState(() {
+                  _data[_data.indexWhere((e) => e.id == data.id)] = data;
+                });
+              }
+            }),
             child: Row(
               children: [
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: NetworkImage('${artikel.urlImg}'),
-                        fit: BoxFit.cover,
-                      ),
+                if (artikel.urlImg == null)
+                  Container(
+                    width: 130,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
                       borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(8.0),
-                          bottomLeft: Radius.circular(8.0))),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text('${artikel.judul}'),
-                          subtitle: Text('${artikel.penulis}'),
-                        ),
-                        Align(
-                          alignment: Alignment.bottomRight,
-                          child: Text(
-                            _tanggal.format(artikel.createdAt!),
-                            style: const TextStyle(
-                                fontSize: 11.0, color: Colors.grey),
-                          ),
-                        ),
-                      ],
+                        topLeft: Radius.circular(8.0),
+                        bottomLeft: Radius.circular(8.0),
+                      ),
                     ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.broken_image_rounded,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    width: 130,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(8.0),
+                        bottomLeft: Radius.circular(8.0),
+                      ),
+                    ),
+                    child: Center(
+                      child: ImageNetWidget(
+                        urlImg: artikel.urlImg!,
+                        fit: BoxFit.fitHeight,
+                      ),
+                    ),
+                  ),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12.0, vertical: 12.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            ListTile(
+                              visualDensity: const VisualDensity(
+                                  horizontal: 0, vertical: -4),
+                              contentPadding: EdgeInsets.zero,
+                              title: RichText(
+                                overflow: TextOverflow.ellipsis,
+                                strutStyle: const StrutStyle(fontSize: 12.0),
+                                text: TextSpan(
+                                  text: '${artikel.judul}',
+                                  style: const TextStyle(
+                                      color: Colors.black, fontSize: 18),
+                                ),
+                              ),
+                              subtitle: Text('${artikel.penulis}'),
+                            ),
+                            Align(
+                              alignment: Alignment.bottomRight,
+                              child: Text(
+                                _tanggal.format(artikel.createdAt!),
+                                style: const TextStyle(
+                                    fontSize: 11.0, color: Colors.grey),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

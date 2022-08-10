@@ -34,6 +34,8 @@ class Kelurahan {
   factory Kelurahan.fromJson(Map<String, dynamic> json) => Kelurahan(
         id: json["id"],
         namaKelurahan: json["nama_kelurahan"],
-        kecamatan: Kecamatan.fromJson(json["kecamatan"]),
+        kecamatan: Kecamatan.fromJson(
+          json["kecamatan"],
+        ),
       );
 }

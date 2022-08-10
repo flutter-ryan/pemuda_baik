@@ -17,6 +17,7 @@ class SearchInputWidget extends StatelessWidget {
     return TextField(
       controller: controller,
       decoration: InputDecoration(
+        hintStyle: TextStyle(color: Colors.grey[400]),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 12.0, vertical: 15.0),
         border: OutlineInputBorder(

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
-import 'package:pemuda_baik/src/blocs/master_kecmatan_bloc.dart';
 import 'package:pemuda_baik/src/blocs/master_kelurahan_bloc.dart';
 import 'package:pemuda_baik/src/blocs/master_kelurahan_delete_bloc.dart';
 import 'package:pemuda_baik/src/blocs/master_kelurahan_save_bloc.dart';
@@ -17,6 +16,7 @@ import 'package:pemuda_baik/src/pages/widget/input_form_widget.dart';
 import 'package:pemuda_baik/src/pages/widget/list_kecamatan_widget.dart';
 import 'package:pemuda_baik/src/pages/widget/loading_box.dart';
 import 'package:pemuda_baik/src/pages/widget/loading_dialog.dart';
+import 'package:pemuda_baik/src/pages/widget/search_input_widget.dart';
 import 'package:pemuda_baik/src/pages/widget/success_dialog.dart';
 import 'package:pemuda_baik/src/repositories/responseApi/api_response.dart';
 
@@ -114,7 +114,7 @@ class _KelurahanPageState extends State<KelurahanPage> {
             _data[_data.indexWhere((e) => e.id == data.id)] = data;
           } else {
             var data = value as Kelurahan;
-            _data.add(data);
+            _data.insert(0, data);
           }
         }
         setState(() {});
@@ -249,59 +249,17 @@ class _KelurahanPageState extends State<KelurahanPage> {
                 );
               case Status.completed:
                 _data = snapshot.data!.data!.kelurahan!;
-                return _listKelurahan();
+                return ListKelurahan(
+                  data: _data,
+                  edit: (Kelurahan? data) => _edit(data!),
+                  delete: (int? id) => _delete(id),
+                );
             }
           }
           return const SizedBox();
         },
       ),
     );
-  }
-
-  Widget _listKelurahan() {
-    return ListView.separated(
-        padding: const EdgeInsets.symmetric(
-          vertical: 18.0,
-        ),
-        itemBuilder: (context, i) {
-          if (_data.isEmpty) {
-            return const Errorbox(
-              message: 'Data tidak tersedia',
-            );
-          }
-          var kelurahan = _data[i];
-          return ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 22.0, vertical: 12.0),
-            title: Text('${kelurahan.namaKelurahan}'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  onPressed: () => _delete(kelurahan.id),
-                  icon: const Icon(
-                    Icons.delete,
-                    color: Colors.red,
-                  ),
-                ),
-                const SizedBox(
-                  width: 8.0,
-                ),
-                IconButton(
-                  onPressed: () => _edit(kelurahan),
-                  icon: const Icon(
-                    Icons.edit_rounded,
-                    color: Colors.blue,
-                  ),
-                )
-              ],
-            ),
-          );
-        },
-        separatorBuilder: (context, i) => const Divider(
-              height: 0,
-            ),
-        itemCount: _data.length);
   }
 
   Widget _formKelurahan(String saveMethod, int? id) {
@@ -406,6 +364,132 @@ class _KelurahanPageState extends State<KelurahanPage> {
         }
         return const SizedBox();
       },
+    );
+  }
+}
+
+class ListKelurahan extends StatefulWidget {
+  const ListKelurahan({
+    Key? key,
+    required this.data,
+    this.edit,
+    this.delete,
+  }) : super(key: key);
+
+  final List<Kelurahan> data;
+  final Function(Kelurahan?)? edit;
+  final Function(int?)? delete;
+
+  @override
+  State<ListKelurahan> createState() => _ListKelurahanState();
+}
+
+class _ListKelurahanState extends State<ListKelurahan> {
+  final _filter = TextEditingController();
+  List<Kelurahan> _data = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _data = widget.data;
+    _filter.addListener(_filterListen);
+  }
+
+  void _filterListen() {
+    if (_filter.text.isEmpty) {
+      _data = widget.data;
+    } else {
+      _data = widget.data
+          .where((e) => e.namaKelurahan!
+              .toLowerCase()
+              .contains(_filter.text.toLowerCase()))
+          .toList();
+    }
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _filter.dispose();
+    _filter.removeListener(_filterListen);
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant ListKelurahan oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.data != widget.data) {
+      setState(() {
+        _data = widget.data;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(18.0),
+          child: SearchInputWidget(
+            controller: _filter,
+            hint: 'Pencarian kelurahan',
+            onClear: () => _filter.clear(),
+          ),
+        ),
+        if (_data.isEmpty)
+          const Expanded(
+            child: Errorbox(
+              message: 'Data tidak tersedia',
+              button: false,
+            ),
+          )
+        else
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.only(top: 0.0, bottom: 18.0),
+              itemBuilder: (context, i) {
+                if (_data.isEmpty) {
+                  return const Errorbox(
+                    message: 'Data tidak tersedia',
+                  );
+                }
+                var kelurahan = _data[i];
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 22.0, vertical: 12.0),
+                  title: Text('${kelurahan.namaKelurahan}'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () => widget.delete!(kelurahan.id),
+                        icon: const Icon(
+                          Icons.delete,
+                          color: Colors.red,
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 8.0,
+                      ),
+                      IconButton(
+                        onPressed: () => widget.edit!(kelurahan),
+                        icon: const Icon(
+                          Icons.edit_rounded,
+                          color: Colors.blue,
+                        ),
+                      )
+                    ],
+                  ),
+                );
+              },
+              separatorBuilder: (context, i) => const Divider(
+                height: 0,
+              ),
+              itemCount: _data.length,
+            ),
+          ),
+      ],
     );
   }
 }

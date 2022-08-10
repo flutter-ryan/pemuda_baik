@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info/package_info.dart';
 import 'package:pemuda_baik/src/config/color_style.dart';
-import 'package:pemuda_baik/src/pages/login_page.dart';
-import 'package:pemuda_baik/src/pages/root_page.dart';
 import 'package:pemuda_baik/src/pages/session_page.dart';
 
 class SplashPage extends StatefulWidget {

@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:pemuda_baik/src/models/pemuda_model.dart';
+
 String savePemudaModelToJson(SavePemudaModel data) =>
     json.encode(data.toJson());
 
@@ -15,6 +17,8 @@ class SavePemudaModel {
     required this.pekerjaan,
     required this.alamat,
     required this.nomorHp,
+    required this.kecamatan,
+    required this.kelurahan,
   });
 
   String nik;
@@ -22,11 +26,13 @@ class SavePemudaModel {
   String tanggalLahir;
   int jenisKelamin;
   int statusNikah;
-  String pendidikanTerakhir;
+  int pendidikanTerakhir;
   int pekerjaan;
   String alamat;
   String nomorHp;
   int agama;
+  int kelurahan;
+  int kecamatan;
 
   Map<String, dynamic> toJson() => {
         "nik": nik,
@@ -39,5 +45,26 @@ class SavePemudaModel {
         "pekerjaan": pekerjaan,
         "alamat": alamat,
         "nomorHp": nomorHp,
+        "kelurahan": kelurahan,
+        "kecamatan": kecamatan
       };
+}
+
+ResponseSavePemudaModel responseSavePemudaModelFromJson(dynamic str) =>
+    ResponseSavePemudaModel.fromJson(str);
+
+class ResponseSavePemudaModel {
+  ResponseSavePemudaModel({
+    this.data,
+    this.message,
+  });
+
+  Pemuda? data;
+  String? message;
+
+  factory ResponseSavePemudaModel.fromJson(Map<String, dynamic> json) =>
+      ResponseSavePemudaModel(
+        data: Pemuda.fromJson(json["data"]),
+        message: json["message"],
+      );
 }

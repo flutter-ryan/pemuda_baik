@@ -7,7 +7,7 @@ class DioHelper {
 
   DioHelper() {
     BaseOptions options = BaseOptions(
-      baseUrl: 'http://e926-180-249-7-163.ngrok.io/api',
+      baseUrl: 'https://pemudabaik.com/api',
       headers: {
         "Accept": "application/json",
       },
@@ -29,7 +29,6 @@ class DioHelper {
       final response = await dio.get('$url');
       responseJson = response.data;
     } on DioError catch (e) {
-      print(e.response!.data);
       if (e.type == DioErrorType.other) {
         throw NoInternetException(
             'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
@@ -55,7 +54,6 @@ class DioHelper {
       final response = await dio.post('$url', data: request);
       responseJson = response.data;
     } on DioError catch (e) {
-      print(e.response!.data);
       if (e.type == DioErrorType.other) {
         throw NoInternetException(
             'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
@@ -83,7 +81,6 @@ class DioHelper {
       final response = await dio.put('$url', data: request);
       responseJson = response.data;
     } on DioError catch (e) {
-      print(e.response!.data);
       if (e.type == DioErrorType.other) {
         throw NoInternetException(
             'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
@@ -110,7 +107,6 @@ class DioHelper {
       final response = await dio.delete('$url');
       responseJson = response.data;
     } on DioError catch (e) {
-      print(e.response!.data);
       if (e.type == DioErrorType.other) {
         throw NoInternetException(
             'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');

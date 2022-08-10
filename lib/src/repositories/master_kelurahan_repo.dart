@@ -6,4 +6,9 @@ class MasterKelurahanRepo {
     final response = await dio.get('/v1/master/kelurahan/create');
     return masterKelurahanModelFromJson(response);
   }
+
+  Future<MasterKelurahanModel> getKelurahanKecamatan(int id) async {
+    final response = await dio.get('/v1/master/kelurahan/$id');
+    return masterKelurahanModelFromJson(response);
+  }
 }
