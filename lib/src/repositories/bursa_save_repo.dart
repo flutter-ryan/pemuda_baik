@@ -8,4 +8,9 @@ class BursaSaveRepo {
         await dio.post('/v1/bursa', bursaSaveModelToJson(bursaSaveModel));
     return responseBursaSaveModelFromJson(response);
   }
+
+  Future<ResponseBursaSaveModel> deleteBursa(int id) async {
+    final response = await dio.delete('/v1/bursa/$id');
+    return responseBursaSaveModelFromJson(response);
+  }
 }

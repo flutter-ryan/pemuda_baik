@@ -52,6 +52,20 @@ class ArtikelSaveBloc {
     }
   }
 
+  Future<void> deleteArtikel() async {
+    _streamArtikelSave = StreamController();
+    final id = _id.value;
+    artikelSaveSink.add(ApiResponse.loading('Memuat...'));
+    try {
+      final res = await _repo.deleteArtikel(id);
+      if (_streamArtikelSave!.isClosed) return;
+      artikelSaveSink.add(ApiResponse.completed(res));
+    } catch (e) {
+      if (_streamArtikelSave!.isClosed) return;
+      artikelSaveSink.add(ApiResponse.error(e.toString()));
+    }
+  }
+
   Future<void> updateArtikel() async {
     _streamArtikelSave = StreamController();
     final id = _id.value;

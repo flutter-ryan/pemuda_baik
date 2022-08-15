@@ -1,6 +1,5 @@
 import 'dart:convert';
-
-import 'package:pemuda_baik/src/models/pemuda_model.dart';
+import 'package:pemuda_baik/src/models/pemuda_page_model.dart';
 
 String savePemudaModelToJson(SavePemudaModel data) =>
     json.encode(data.toJson());
@@ -59,12 +58,12 @@ class ResponseSavePemudaModel {
     this.message,
   });
 
-  Pemuda? data;
+  PemudaPage? data;
   String? message;
 
   factory ResponseSavePemudaModel.fromJson(Map<String, dynamic> json) =>
       ResponseSavePemudaModel(
-        data: Pemuda.fromJson(json["data"]),
+        data: PemudaPage.fromJson(json["data"]),
         message: json["message"],
       );
 }

@@ -8,4 +8,9 @@ class ArtikelSaveRepo {
         await dio.post('/v1/artikel', artikelSaveModelToJson(artikelSaveModel));
     return responseArtikelSaveModelFromJson(response);
   }
+
+  Future<ResponseArtikelSaveModel> deleteArtikel(int id) async {
+    final response = await dio.delete('/v1/artikel/$id');
+    return responseArtikelSaveModelFromJson(response);
+  }
 }

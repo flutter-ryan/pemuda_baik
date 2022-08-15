@@ -64,9 +64,9 @@ class _BursaKerjaPageState extends State<BursaKerjaPage> {
           withNavBar: false,
         ).then((value) {
           if (value != null) {
-            var data = value as ResponseBursaSaveModel;
+            var data = value as BursaType;
             Fluttertoast.showToast(
-              msg: '${data.message}',
+              msg: '${data.data.message}',
               toastLength: Toast.LENGTH_LONG,
               gravity: ToastGravity.BOTTOM,
               timeInSecForIosWeb: 1,
@@ -75,7 +75,7 @@ class _BursaKerjaPageState extends State<BursaKerjaPage> {
               fontSize: 16.0,
             );
             setState(() {
-              _data.insert(0, data.data!);
+              _data.insert(0, data.data.data!);
             });
           }
         }),
@@ -212,9 +212,9 @@ class _ListBursaState extends State<ListBursa> {
                           ),
                         )).then((value) {
                       if (value != null) {
-                        var data = value as ResponseBursaSaveModel;
+                        var data = value as BursaType;
                         Fluttertoast.showToast(
-                          msg: '${data.message}',
+                          msg: '${data.data.message}',
                           toastLength: Toast.LENGTH_LONG,
                           gravity: ToastGravity.BOTTOM,
                           timeInSecForIosWeb: 1,
@@ -222,10 +222,18 @@ class _ListBursaState extends State<ListBursa> {
                           textColor: Colors.white,
                           fontSize: 16.0,
                         );
-                        setState(() {
-                          _data[_data.indexWhere(
-                              (e) => e.id == data.data!.id)] = data.data!;
-                        });
+                        if (data.type == 'update') {
+                          setState(() {
+                            _data[_data.indexWhere(
+                                    (e) => e.id == data.data.data!.id)] =
+                                data.data.data!;
+                          });
+                        } else {
+                          setState(() {
+                            _data
+                                .removeWhere((e) => e.id == data.data.data!.id);
+                          });
+                        }
                       }
                     }),
                     title: Text('${data.title}'),

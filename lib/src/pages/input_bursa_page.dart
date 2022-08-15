@@ -5,6 +5,7 @@ import 'package:pemuda_baik/src/blocs/bursa_save_bloc.dart';
 import 'package:pemuda_baik/src/config/color_style.dart';
 import 'package:pemuda_baik/src/models/bursa_model.dart';
 import 'package:pemuda_baik/src/models/bursa_save_model.dart';
+import 'package:pemuda_baik/src/pages/widget/confirm_dialog.dart';
 import 'package:pemuda_baik/src/pages/widget/error_dialog.dart';
 import 'package:pemuda_baik/src/pages/widget/input_form_widget.dart';
 import 'package:pemuda_baik/src/pages/widget/loading_dialog.dart';
@@ -52,7 +53,7 @@ class _InputBursaPageState extends State<InputBursaPage> {
       _bursaSaveBloc.judulSink.add(_title.text);
       _bursaSaveBloc.persyaratanSink.add(_persyaratan.text);
       _bursaSaveBloc.saveBursa();
-      _showStreamSave();
+      _showStreamSave('create');
     }
   }
 
@@ -64,20 +65,41 @@ class _InputBursaPageState extends State<InputBursaPage> {
       _bursaSaveBloc.judulSink.add(_title.text);
       _bursaSaveBloc.persyaratanSink.add(_persyaratan.text);
       _bursaSaveBloc.updateBursa();
-      _showStreamSave();
+      _showStreamSave('update');
     }
   }
 
-  void _showStreamSave() {
+  void _delete() {
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
+    FocusScope.of(context).unfocus();
     showAnimatedDialog(
       context: context,
       builder: (context) {
-        return _streamSaveBursa();
+        return ConfirmDialog(
+          message: 'Anda yaking menghapus data ini?',
+          onConfirm: () => Navigator.pop(context, 'delete'),
+        );
+      },
+      animationType: DialogTransitionType.slideFromBottomFade,
+    ).then((value) {
+      if (value != null) {
+        _bursaSaveBloc.idSink.add(widget.data!.id!);
+        _bursaSaveBloc.deleteBursa();
+        _showStreamSave('delete');
+      }
+    });
+  }
+
+  void _showStreamSave(String? type) {
+    showAnimatedDialog(
+      context: context,
+      builder: (context) {
+        return _streamSaveBursa(type);
       },
       animationType: DialogTransitionType.slideFromBottomFade,
       duration: const Duration(milliseconds: 500),
     ).then((value) {
-      var data = value as ResponseBursaSaveModel;
+      var data = value as BursaType;
       if (!mounted) return;
       Future.delayed(const Duration(milliseconds: 500), () {
         Navigator.pop(context, data);
@@ -149,29 +171,71 @@ class _InputBursaPageState extends State<InputBursaPage> {
             const SizedBox(
               height: 52,
             ),
-            SizedBox(
-              height: 52,
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: widget.data == null ? _simpan : _update,
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
+            if (widget.data != null)
+              Row(
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: SizedBox(
+                      height: 52,
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _delete,
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          primary: Colors.grey[200],
+                          onPrimary: Colors.red,
+                        ),
+                        child: const Icon(Icons.delete),
+                      ),
+                    ),
                   ),
-                  primary: kPrimaryDarkColor,
+                  const SizedBox(
+                    width: 15,
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: SizedBox(
+                      height: 52,
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _update,
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          primary: kPrimaryDarkColor,
+                        ),
+                        child: const Text('UPDATE'),
+                      ),
+                    ),
+                  )
+                ],
+              )
+            else
+              SizedBox(
+                height: 52,
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _simpan,
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    primary: kPrimaryDarkColor,
+                  ),
+                  child: const Text('SIMPAN'),
                 ),
-                child: widget.data == null
-                    ? const Text('SIMPAN')
-                    : const Text('UPDATE'),
-              ),
-            )
+              )
           ],
         ),
       ),
     );
   }
 
-  Widget _streamSaveBursa() {
+  Widget _streamSaveBursa(String? type) {
     return StreamBuilder<ApiResponse<ResponseBursaSaveModel>>(
       stream: _bursaSaveBloc.bursaSaveStream,
       builder: (context, snapshot) {
@@ -186,11 +250,22 @@ class _InputBursaPageState extends State<InputBursaPage> {
                 message: snapshot.data!.message,
               );
             case Status.completed:
-              Navigator.pop(context, snapshot.data!.data!);
+              Navigator.pop(
+                  context, BursaType(type: type!, data: snapshot.data!.data!));
           }
         }
         return const SizedBox();
       },
     );
   }
+}
+
+class BursaType {
+  BursaType({
+    required this.type,
+    required this.data,
+  });
+
+  String type;
+  ResponseBursaSaveModel data;
 }

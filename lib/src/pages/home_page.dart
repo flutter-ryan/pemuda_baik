@@ -21,7 +21,8 @@ class Homepage extends StatefulWidget {
   State<Homepage> createState() => _HomepageState();
 }
 
-class _HomepageState extends State<Homepage> {
+class _HomepageState extends State<Homepage>
+    with AutomaticKeepAliveClientMixin {
   final UserBloc _userBloc = UserBloc();
 
   @override
@@ -38,6 +39,7 @@ class _HomepageState extends State<Homepage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -202,4 +204,7 @@ class _HomepageState extends State<Homepage> {
       },
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

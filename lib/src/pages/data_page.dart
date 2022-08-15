@@ -8,14 +8,14 @@ import 'package:pemuda_baik/src/blocs/pemuda_bloc.dart';
 import 'package:pemuda_baik/src/blocs/pemuda_save_bloc.dart';
 import 'package:pemuda_baik/src/config/color_style.dart';
 import 'package:pemuda_baik/src/config/size_config.dart';
-import 'package:pemuda_baik/src/models/pemuda_model.dart';
+import 'package:pemuda_baik/src/models/pemuda_page_model.dart';
 import 'package:pemuda_baik/src/models/save_pemuda_model.dart';
 import 'package:pemuda_baik/src/pages/input_pemuda_page.dart';
+import 'package:pemuda_baik/src/pages/search_pemuda_page.dart';
 import 'package:pemuda_baik/src/pages/widget/confirm_dialog.dart';
 import 'package:pemuda_baik/src/pages/widget/error_box.dart';
 import 'package:pemuda_baik/src/pages/widget/error_dialog.dart';
 import 'package:pemuda_baik/src/pages/widget/loading_dialog.dart';
-import 'package:pemuda_baik/src/pages/widget/search_input_widget.dart';
 import 'package:pemuda_baik/src/pages/widget/success_dialog.dart';
 import 'package:pemuda_baik/src/repositories/responseApi/api_response.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent-tab-view.dart';
@@ -31,7 +31,7 @@ class _DatapageState extends State<Datapage> {
   final PemudaBloc _pemudaBloc = PemudaBloc();
   final ScrollController _scrollController = ScrollController();
   bool _show = true;
-  List<Pemuda> _pemuda = [];
+  PemudaPageModel? _pemuda;
 
   @override
   void initState() {
@@ -45,6 +45,10 @@ class _DatapageState extends State<Datapage> {
       _show = _scrollController.position.userScrollDirection ==
           ScrollDirection.forward;
     });
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
+      _pemudaBloc.getPagePemuda();
+    }
   }
 
   void _inputPemudaForm() {
@@ -54,9 +58,9 @@ class _DatapageState extends State<Datapage> {
       withNavBar: false,
     ).then((value) {
       if (value != null) {
-        var pemuda = value as Pemuda;
+        var pemuda = value as PemudaPage;
         setState(() {
-          _pemuda.insert(0, pemuda);
+          _pemuda!.data!.insert(0, pemuda);
         });
       }
     });
@@ -83,6 +87,14 @@ class _DatapageState extends State<Datapage> {
           title: const Text('Data Pemuda'),
           actions: [
             IconButton(
+              onPressed: () => pushNewScreen(
+                context,
+                screen: const SearchPemudaPage(),
+                withNavBar: false,
+              ),
+              icon: const Icon(Icons.search),
+            ),
+            IconButton(
               onPressed: () {
                 _pemudaBloc.getPemuda();
                 setState(() {});
@@ -106,7 +118,7 @@ class _DatapageState extends State<Datapage> {
   }
 
   Widget _streamPemuda() {
-    return StreamBuilder<ApiResponse<PemudaModel>>(
+    return StreamBuilder<ApiResponse<PemudaPageModel>>(
       stream: _pemudaBloc.pemudaStream,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
@@ -136,9 +148,9 @@ class _DatapageState extends State<Datapage> {
                 ),
               );
             case Status.completed:
-              _pemuda = snapshot.data!.data!.pemuda!;
+              _pemuda = snapshot.data!.data!;
               return ListPemudaWidget(
-                data: _pemuda,
+                data: _pemuda!,
                 scrollController: _scrollController,
               );
           }
@@ -154,7 +166,7 @@ class ListPemudaWidget extends StatefulWidget {
       {Key? key, required this.data, required this.scrollController})
       : super(key: key);
 
-  final List<Pemuda> data;
+  final PemudaPageModel data;
   final ScrollController scrollController;
 
   @override
@@ -164,30 +176,16 @@ class ListPemudaWidget extends StatefulWidget {
 class _ListPemudaWidgetState extends State<ListPemudaWidget>
     with AutomaticKeepAliveClientMixin {
   final PemudaSaveBloc _pemudaSaveBloc = PemudaSaveBloc();
-  final _filter = TextEditingController();
-  List<Pemuda> _data = [];
+  List<PemudaPage> _data = [];
   final DateFormat _tanggal = DateFormat('dd MMMM yyyy', 'id');
 
   @override
   void initState() {
     super.initState();
-    _data = widget.data;
-    _filter.addListener(_filterListen);
+    _data = widget.data.data!;
   }
 
-  void _filterListen() {
-    if (_filter.text.isEmpty) {
-      _data = widget.data;
-    } else {
-      _data = widget.data
-          .where(
-              (e) => e.nama!.toLowerCase().contains(_filter.text.toLowerCase()))
-          .toList();
-    }
-    setState(() {});
-  }
-
-  void _detailPemuda(Pemuda data) {
+  void _detailPemuda(PemudaPage data) {
     showBarModalBottomSheet(
       context: context,
       useRootNavigator: true,
@@ -235,7 +233,7 @@ class _ListPemudaWidgetState extends State<ListPemudaWidget>
       duration: const Duration(milliseconds: 500),
     ).then((value) {
       if (value != null) {
-        var data = value as Pemuda;
+        var data = value as PemudaPage;
         _data.removeWhere((e) => e.id == data.id);
         setState(() {});
       }
@@ -244,201 +242,177 @@ class _ListPemudaWidgetState extends State<ListPemudaWidget>
 
   @override
   void dispose() {
-    _filter.dispose();
     _pemudaSaveBloc.dispose();
     super.dispose();
-  }
-
-  @override
-  void didUpdateWidget(covariant ListPemudaWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.data != widget.data) {
-      setState(() {
-        _data = widget.data;
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
     super.build(context);
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 15.0),
-          child: SearchInputWidget(
-            controller: _filter,
-            hint: 'Pencarian nama pemuda',
-            onClear: () => _filter.clear(),
-          ),
-        ),
-        if (_data.isEmpty)
-          Expanded(
-            child: Column(
+    return ListView.separated(
+      controller: widget.scrollController,
+      padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 32.0),
+      itemCount: widget.data.currentPage != widget.data.totalPage
+          ? _data.length + 1
+          : _data.length,
+      itemBuilder: (context, i) {
+        if (i == _data.length) {
+          return SizedBox(
+            height: 30,
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
-                Icon(
-                  Icons.warning_rounded,
-                  size: 52,
-                  color: Colors.red,
+                CircleAvatar(
+                  radius: 12,
+                  backgroundColor: Colors.transparent,
+                  child: CircularProgressIndicator(),
                 ),
                 SizedBox(
-                  height: 12.0,
+                  width: 12,
                 ),
-                Text(
-                  'Data pemuda tidak ditemukan',
-                  style: TextStyle(color: Colors.grey, fontSize: 16.0),
-                  textAlign: TextAlign.center,
-                )
+                Text('Memuat...'),
               ],
             ),
-          )
-        else
-          Expanded(
-            child: ListView.separated(
-              controller: widget.scrollController,
-              padding: const EdgeInsets.all(15.0),
-              itemCount: _data.length,
-              itemBuilder: (context, i) {
-                var pemuda = _data[i];
-                return Container(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 22.0, horizontal: 18.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12.0),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 12,
-                        offset: Offset(2.0, 2.0),
-                      )
-                    ],
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (pemuda.agama == 'Islam' &&
-                              pemuda.jenisKelamin == 'Perempuan')
-                            Container(
-                              width: 100,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                borderRadius: BorderRadius.circular(12.0),
-                                image: const DecorationImage(
-                                  image: AssetImage('images/female.jpg'),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            )
-                          else if (pemuda.agama != 'Islam' &&
-                              pemuda.jenisKelamin == 'Perempuan')
-                            Container(
-                              width: 100,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                  color: Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(12.0),
-                                  image: const DecorationImage(
-                                    image: AssetImage('images/female2.jpeg'),
-                                    fit: BoxFit.cover,
-                                  )),
-                            )
-                          else
-                            Container(
-                              width: 100,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                  color: Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(12.0),
-                                  image: const DecorationImage(
-                                    image: AssetImage('images/male.jpg'),
-                                    fit: BoxFit.cover,
-                                  ),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                        color: Colors.black12,
-                                        offset: Offset(2.0, 2.0),
-                                        blurRadius: 12.0)
-                                  ]),
-                            ),
-                          const SizedBox(
-                            height: 15.0,
-                          ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                onPressed: () => _deletePemuda(pemuda.id),
-                                color: Colors.red,
-                                icon: const Icon(Icons.delete),
-                              ),
-                              const SizedBox(
-                                width: 8.0,
-                              ),
-                              IconButton(
-                                onPressed: () => _detailPemuda(pemuda),
-                                color: Colors.blue,
-                                icon: const Icon(Icons.info_outline_rounded),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(
-                        width: 18.0,
-                      ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            TileIdentitas(
-                              title: "NIK",
-                              subtitle: '${pemuda.nomorKtp}',
-                            ),
-                            const SizedBox(
-                              height: 4.0,
-                            ),
-                            TileIdentitas(
-                              title: "Nama",
-                              subtitle: '${pemuda.nama}',
-                            ),
-                            const SizedBox(
-                              height: 4.0,
-                            ),
-                            TileIdentitas(
-                              title: "Alamat",
-                              subtitle: "${pemuda.alamat}",
-                            ),
-                            const SizedBox(
-                              height: 4.0,
-                            ),
-                            TileIdentitas(
-                              title: "Nomor Hp",
-                              subtitle: '${pemuda.nomorKontak}',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              separatorBuilder: (context, i) => const SizedBox(
-                height: 22,
-              ),
-            ),
-          ),
-      ],
+          );
+        }
+        var pemuda = _data[i];
+        return _dataPemuda(pemuda);
+      },
+      separatorBuilder: (context, i) => const SizedBox(
+        height: 22,
+      ),
     );
   }
 
-  Widget _detailPemudaWidget(Pemuda data) {
+  Container _dataPemuda(PemudaPage pemuda) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 22.0, horizontal: 18.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.0),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 12,
+            offset: Offset(2.0, 2.0),
+          )
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (pemuda.agama == 'Islam' && pemuda.jenisKelamin == 'Perempuan')
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(12.0),
+                    image: const DecorationImage(
+                      image: AssetImage('images/female.jpg'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                )
+              else if (pemuda.agama != 'Islam' &&
+                  pemuda.jenisKelamin == 'Perempuan')
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(12.0),
+                      image: const DecorationImage(
+                        image: AssetImage('images/female2.jpeg'),
+                        fit: BoxFit.cover,
+                      )),
+                )
+              else
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(12.0),
+                      image: const DecorationImage(
+                        image: AssetImage('images/male.jpg'),
+                        fit: BoxFit.cover,
+                      ),
+                      boxShadow: const [
+                        BoxShadow(
+                            color: Colors.black12,
+                            offset: Offset(2.0, 2.0),
+                            blurRadius: 12.0)
+                      ]),
+                ),
+              const SizedBox(
+                height: 15.0,
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: () => _deletePemuda(pemuda.id),
+                    color: Colors.red,
+                    icon: const Icon(Icons.delete),
+                  ),
+                  const SizedBox(
+                    width: 8.0,
+                  ),
+                  IconButton(
+                    onPressed: () => _detailPemuda(pemuda),
+                    color: Colors.blue,
+                    icon: const Icon(Icons.info_outline_rounded),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(
+            width: 18.0,
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TileIdentitas(
+                  title: "NIK",
+                  subtitle: '${pemuda.nomorKtp}',
+                ),
+                const SizedBox(
+                  height: 4.0,
+                ),
+                TileIdentitas(
+                  title: "Nama",
+                  subtitle: '${pemuda.nama}',
+                ),
+                const SizedBox(
+                  height: 4.0,
+                ),
+                TileIdentitas(
+                  title: "Alamat",
+                  subtitle: "${pemuda.alamat}",
+                ),
+                const SizedBox(
+                  height: 4.0,
+                ),
+                TileIdentitas(
+                  title: "Nomor Hp",
+                  subtitle: '${pemuda.nomorKontak}',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailPemudaWidget(PemudaPage data) {
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 32),
       children: [

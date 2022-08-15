@@ -57,9 +57,9 @@ class _ArtikelPageState extends State<ArtikelPage> {
           withNavBar: false,
         ).then((value) {
           if (value != null) {
-            var data = value as Artikel;
+            var data = value as ArtikelType;
             setState(() {
-              _data.insert(0, data);
+              _data.insert(0, data.data);
             });
           }
         }),
@@ -166,10 +166,17 @@ class _ListArtikelWidgetState extends State<ListArtikelWidget> {
               withNavBar: false,
             ).then((value) {
               if (value != null) {
-                var data = value as Artikel;
-                setState(() {
-                  _data[_data.indexWhere((e) => e.id == data.id)] = data;
-                });
+                var data = value as ArtikelType;
+                if (data.type == 'update') {
+                  setState(() {
+                    _data[_data.indexWhere((e) => e.id == data.data.id)] =
+                        data.data;
+                  });
+                } else {
+                  setState(() {
+                    _data.removeWhere((e) => e.id == data.data.id);
+                  });
+                }
               }
             }),
             child: Row(

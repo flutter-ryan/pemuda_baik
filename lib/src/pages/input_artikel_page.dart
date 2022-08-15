@@ -12,6 +12,7 @@ import 'package:pemuda_baik/src/blocs/artikel_save_bloc.dart';
 import 'package:pemuda_baik/src/config/color_style.dart';
 import 'package:pemuda_baik/src/models/artikel_model.dart';
 import 'package:pemuda_baik/src/models/artikel_save_model.dart';
+import 'package:pemuda_baik/src/pages/widget/confirm_dialog.dart';
 import 'package:pemuda_baik/src/pages/widget/error_dialog.dart';
 import 'package:pemuda_baik/src/pages/widget/input_form_widget.dart';
 import 'package:pemuda_baik/src/pages/widget/loading_dialog.dart';
@@ -68,7 +69,7 @@ class _InputArtikelPageState extends State<InputArtikelPage> {
       _artikelSaveBloc.imageSink.add(_image64);
       _artikelSaveBloc.extSink.add(_ext);
       _artikelSaveBloc.saveArtikel();
-      _showStreamSaveArtikel();
+      _showStreamSaveArtikel('create');
     }
   }
 
@@ -83,20 +84,41 @@ class _InputArtikelPageState extends State<InputArtikelPage> {
       _artikelSaveBloc.imageSink.add(_image64);
       _artikelSaveBloc.extSink.add(_ext);
       _artikelSaveBloc.updateArtikel();
-      _showStreamSaveArtikel();
+      _showStreamSaveArtikel('update');
     }
   }
 
-  void _showStreamSaveArtikel() {
+  void _delete() {
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
+    FocusScope.of(context).unfocus();
     showAnimatedDialog(
       context: context,
       builder: (context) {
-        return _streamSaveArtikel();
+        return ConfirmDialog(
+          message: 'Anda yaking menghapus data ini?',
+          onConfirm: () => Navigator.pop(context, 'delete'),
+        );
+      },
+      animationType: DialogTransitionType.slideFromBottomFade,
+    ).then((value) {
+      if (value != null) {
+        _artikelSaveBloc.idSink.add(widget.data!.id!);
+        _artikelSaveBloc.deleteArtikel();
+        _showStreamSaveArtikel('delete');
+      }
+    });
+  }
+
+  void _showStreamSaveArtikel(String? type) {
+    showAnimatedDialog(
+      context: context,
+      builder: (context) {
+        return _streamSaveArtikel(type);
       },
       animationType: DialogTransitionType.slideFromBottomFade,
       duration: const Duration(milliseconds: 500),
     ).then((value) {
-      var data = value as Artikel;
+      var data = value as ArtikelType;
       if (!mounted) return;
       Future.delayed(const Duration(milliseconds: 500), () {
         Navigator.pop(context, data);
@@ -257,19 +279,53 @@ class _InputArtikelPageState extends State<InputArtikelPage> {
                   const SizedBox(
                     height: 32.0,
                   ),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: widget.data != null ? _update : _simpan,
-                      style: ElevatedButton.styleFrom(
-                        primary: kPrimaryDarkColor,
+                  if (widget.data != null)
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: SizedBox(
+                            height: 52,
+                            child: ElevatedButton(
+                              onPressed: _delete,
+                              style: ElevatedButton.styleFrom(
+                                primary: Colors.grey[200],
+                                onPrimary: Colors.red,
+                              ),
+                              child: const Icon(Icons.delete),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 15.0,
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: SizedBox(
+                            height: 52,
+                            child: ElevatedButton(
+                              onPressed: _update,
+                              style: ElevatedButton.styleFrom(
+                                primary: kPrimaryDarkColor,
+                              ),
+                              child: const Text('UPDATE'),
+                            ),
+                          ),
+                        )
+                      ],
+                    )
+                  else
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: _simpan,
+                        style: ElevatedButton.styleFrom(
+                          primary: kPrimaryDarkColor,
+                        ),
+                        child: const Text('SIMPAN'),
                       ),
-                      child: widget.data != null
-                          ? const Text('UPDATE')
-                          : const Text('SIMPAN'),
-                    ),
-                  )
+                    )
                 ],
               ),
             ),
@@ -279,7 +335,7 @@ class _InputArtikelPageState extends State<InputArtikelPage> {
     );
   }
 
-  Widget _streamSaveArtikel() {
+  Widget _streamSaveArtikel(String? type) {
     return StreamBuilder<ApiResponse<ResponseArtikelSaveModel>>(
       stream: _artikelSaveBloc.artikelSaveStream,
       builder: (context, snapshot) {
@@ -294,7 +350,8 @@ class _InputArtikelPageState extends State<InputArtikelPage> {
                 message: snapshot.data!.message,
               );
             case Status.completed:
-              Navigator.pop(context, snapshot.data!.data!.data);
+              Navigator.pop(context,
+                  ArtikelType(type: type, data: snapshot.data!.data!.data!));
           }
         }
         return const SizedBox();
@@ -378,4 +435,14 @@ class _InputArtikelPageState extends State<InputArtikelPage> {
       ),
     );
   }
+}
+
+class ArtikelType {
+  ArtikelType({
+    required this.type,
+    required this.data,
+  });
+
+  String? type;
+  Artikel data;
 }

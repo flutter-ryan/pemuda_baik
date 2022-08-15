@@ -55,6 +55,21 @@ class BursaSaveBloc {
     }
   }
 
+  Future<void> deleteBursa() async {
+    _streamBursaSave = StreamController();
+    final id = _id.value;
+    bursaSaveSink.add(ApiResponse.loading('Memuat...'));
+
+    try {
+      final res = await _repo.deleteBursa(id);
+      if (_streamBursaSave!.isClosed) return;
+      bursaSaveSink.add(ApiResponse.completed(res));
+    } catch (e) {
+      if (_streamBursaSave!.isClosed) return;
+      bursaSaveSink.add(ApiResponse.error(e.toString()));
+    }
+  }
+
   dispose() {
     _streamBursaSave?.close();
     _id.close();

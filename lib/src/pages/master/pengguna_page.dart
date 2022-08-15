@@ -11,6 +11,7 @@ import 'package:pemuda_baik/src/config/size_config.dart';
 import 'package:pemuda_baik/src/models/master_user_save_model.dart';
 import 'package:pemuda_baik/src/models/master_users_model.dart';
 import 'package:pemuda_baik/src/models/pemuda_model.dart';
+import 'package:pemuda_baik/src/models/pemuda_page_model.dart';
 import 'package:pemuda_baik/src/models/user_model.dart';
 import 'package:pemuda_baik/src/pages/widget/confirm_dialog.dart';
 import 'package:pemuda_baik/src/pages/widget/error_box.dart';
@@ -691,7 +692,7 @@ class _FormEditUserWidgetState extends State<FormEditUserWidget> {
   }
 
   Widget _listProfilPemuda() {
-    return StreamBuilder<ApiResponse<PemudaModel>>(
+    return StreamBuilder<ApiResponse<PemudaPageModel>>(
       stream: _pemudaBloc.pemudaStream,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
@@ -711,7 +712,7 @@ class _FormEditUserWidgetState extends State<FormEditUserWidget> {
                 ),
               );
             case Status.completed:
-              return ListProfilPemuda(data: snapshot.data!.data!.pemuda!);
+              return ListProfilPemuda(data: snapshot.data!.data!);
           }
         }
         return const SizedBox();
@@ -726,7 +727,7 @@ class ListProfilPemuda extends StatefulWidget {
     required this.data,
   }) : super(key: key);
 
-  final List<Pemuda> data;
+  final PemudaPageModel data;
 
   @override
   State<ListProfilPemuda> createState() => _ListProfilPemudaState();
@@ -734,20 +735,20 @@ class ListProfilPemuda extends StatefulWidget {
 
 class _ListProfilPemudaState extends State<ListProfilPemuda> {
   final _filter = TextEditingController();
-  List<Pemuda> _data = [];
+  List<PemudaPage> _data = [];
 
   @override
   void initState() {
     super.initState();
-    _data = widget.data;
+    _data.addAll(widget.data.data!);
     _filter.addListener(_filterListen);
   }
 
   void _filterListen() {
     if (_filter.text.isEmpty) {
-      _data = widget.data;
+      _data = widget.data.data!;
     } else {
-      _data = widget.data
+      _data = widget.data.data!
           .where(
               (e) => e.nama!.toLowerCase().contains(_filter.text.toLowerCase()))
           .toList();

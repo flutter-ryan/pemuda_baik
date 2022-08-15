@@ -7,7 +7,7 @@ class DioHelper {
 
   DioHelper() {
     BaseOptions options = BaseOptions(
-      baseUrl: 'https://pemudabaik.com/api',
+      baseUrl: 'http://e8d4-180-244-72-234.ngrok.io/api',
       headers: {
         "Accept": "application/json",
       },
@@ -28,16 +28,18 @@ class DioHelper {
       }
       final response = await dio.get('$url');
       responseJson = response.data;
-    } on DioError catch (e) {
-      if (e.type == DioErrorType.other) {
-        throw NoInternetException(
-            'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
+    } catch (e) {
+      if (e is DioError) {
+        if (e.type == DioErrorType.other) {
+          throw NoInternetException(
+              'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
+        }
+        if (e.response!.data == '') {
+          throw NoInternetException(
+              'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
+        }
+        _returnResponse(e.response);
       }
-      if (e.response!.data == '') {
-        throw NoInternetException(
-            'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
-      }
-      _returnResponse(e.response);
     }
     return responseJson;
   }
@@ -53,16 +55,18 @@ class DioHelper {
       dio.options.headers['Content-Type'] = 'application/json';
       final response = await dio.post('$url', data: request);
       responseJson = response.data;
-    } on DioError catch (e) {
-      if (e.type == DioErrorType.other) {
-        throw NoInternetException(
-            'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
+    } catch (e) {
+      if (e is DioError) {
+        if (e.type == DioErrorType.other) {
+          throw NoInternetException(
+              'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
+        }
+        if (e.response!.data == '') {
+          throw NoInternetException(
+              'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
+        }
+        _returnResponse(e.response);
       }
-      if (e.response!.data == '') {
-        throw NoInternetException(
-            'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
-      }
-      _returnResponse(e.response);
     }
 
     return responseJson;
@@ -80,16 +84,18 @@ class DioHelper {
       dio.options.headers['Accept'] = 'application/json';
       final response = await dio.put('$url', data: request);
       responseJson = response.data;
-    } on DioError catch (e) {
-      if (e.type == DioErrorType.other) {
-        throw NoInternetException(
-            'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
+    } catch (e) {
+      if (e is DioError) {
+        if (e.type == DioErrorType.other) {
+          throw NoInternetException(
+              'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
+        }
+        if (e.response!.data == '') {
+          throw NoInternetException(
+              'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
+        }
+        _returnResponse(e.response);
       }
-      if (e.response!.data == '') {
-        throw NoInternetException(
-            'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
-      }
-      _returnResponse(e.response);
     }
 
     return responseJson;
@@ -106,16 +112,18 @@ class DioHelper {
       dio.options.headers['Accept'] = 'application/json';
       final response = await dio.delete('$url');
       responseJson = response.data;
-    } on DioError catch (e) {
-      if (e.type == DioErrorType.other) {
-        throw NoInternetException(
-            'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
+    } catch (e) {
+      if (e is DioError) {
+        if (e.type == DioErrorType.other) {
+          throw NoInternetException(
+              'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
+        }
+        if (e.response!.data == '') {
+          throw NoInternetException(
+              'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
+        }
+        _returnResponse(e.response);
       }
-      if (e.response!.data == '') {
-        throw NoInternetException(
-            'Server tidak dapat terhubung.\nPastikan Anda terhubung ke internet atau coba beberapa saat lagi');
-      }
-      _returnResponse(e.response);
     }
 
     return responseJson;

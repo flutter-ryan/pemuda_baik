@@ -11,7 +11,7 @@ import 'package:pemuda_baik/src/models/master_kecamatan_model.dart';
 import 'package:pemuda_baik/src/models/master_kelurahan_model.dart';
 import 'package:pemuda_baik/src/models/master_pekerjaan_model.dart';
 import 'package:pemuda_baik/src/models/master_pendidikan_model.dart';
-import 'package:pemuda_baik/src/models/pemuda_model.dart';
+import 'package:pemuda_baik/src/models/pemuda_page_model.dart';
 import 'package:pemuda_baik/src/models/save_pemuda_model.dart';
 import 'package:pemuda_baik/src/pages/widget/list_kecamatan_widget.dart';
 import 'package:pemuda_baik/src/pages/widget/list_kelurahan_widget.dart';
@@ -84,7 +84,7 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
         duration: const Duration(milliseconds: 300),
       ).then((value) {
         if (value != null) {
-          var data = value as Pemuda;
+          var data = value as PemudaPage;
           Navigator.pop(context, data);
         }
       });
@@ -98,7 +98,7 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
         return Theme(
           data: ThemeData.light().copyWith(
             colorScheme: const ColorScheme.light(
-              primary: kPrimaryColor,
+              primary: kPrimaryDarkColor,
             ),
           ),
           child: DatePickerDialog(
