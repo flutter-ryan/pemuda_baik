@@ -1,12 +1,20 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:pemuda_baik/src/blocs/dashboard_chart_bloc.dart';
+import 'package:pemuda_baik/src/blocs/kecamatan_pendidikan_bloc.dart';
+import 'package:pemuda_baik/src/config/color_style.dart';
 import 'package:pemuda_baik/src/config/size_config.dart';
 import 'package:pemuda_baik/src/models/dashboard_chart_model.dart';
+import 'package:pemuda_baik/src/models/kecamatan_pendidikan_model.dart';
+import 'package:pemuda_baik/src/models/pemuda_page_model.dart';
 import 'package:pemuda_baik/src/pages/widget/error_box.dart';
+import 'package:pemuda_baik/src/pages/widget/error_sheet.dart';
 import 'package:pemuda_baik/src/pages/widget/loading_box.dart';
+import 'package:pemuda_baik/src/pages/widget/loading_sheet.dart';
+import 'package:pemuda_baik/src/pages/widget/tab_detail.dart';
 import 'package:pemuda_baik/src/repositories/responseApi/api_response.dart';
 import 'package:pie_chart/pie_chart.dart';
 
@@ -19,7 +27,8 @@ class PendidikanChart extends StatefulWidget {
   State<PendidikanChart> createState() => _PendidikanChartState();
 }
 
-class _PendidikanChartState extends State<PendidikanChart> {
+class _PendidikanChartState extends State<PendidikanChart>
+    with AutomaticKeepAliveClientMixin {
   final DashboardChartBloc bloc = DashboardChartBloc();
   List<JenisData> _data = [];
 
@@ -47,6 +56,7 @@ class _PendidikanChartState extends State<PendidikanChart> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     SizeConfig().init(context);
     return Container(
       width: double.infinity,
@@ -134,7 +144,7 @@ class _PendidikanChartState extends State<PendidikanChart> {
 
   Widget _buildDetail() {
     return Container(
-      constraints: BoxConstraints(maxHeight: SizeConfig.blockSizeVertical * 80),
+      constraints: BoxConstraints(maxHeight: SizeConfig.blockSizeVertical * 95),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,82 +152,29 @@ class _PendidikanChartState extends State<PendidikanChart> {
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 22.0, horizontal: 22.0),
             child: Text(
-              'Detail Pendidikan',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              'Detail Pendidikan Per Kecamatan',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
           Flexible(
-            child: ListView.separated(
-              padding: const EdgeInsets.only(bottom: 22.0),
-              shrinkWrap: true,
-              itemBuilder: (context, i) {
-                var data = _data[i];
-                return Padding(
-                  padding: const EdgeInsets.all(22.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '${data.nama}',
-                        style: const TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 18.0,
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              children: [
-                                Text(
-                                  '${data.jenisKelamin!.lakiLaki}',
-                                  style: const TextStyle(
-                                      fontSize: 25.0,
-                                      fontWeight: FontWeight.w600),
-                                ),
-                                const Text('Laki-laki'),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 52.0,
-                            child: VerticalDivider(
-                              color: Colors.grey,
-                            ),
-                          ),
-                          Expanded(
-                            child: Column(
-                              children: [
-                                Text(
-                                  '${data.jenisKelamin!.perempuan}',
-                                  style: const TextStyle(
-                                      fontSize: 25.0,
-                                      fontWeight: FontWeight.w600),
-                                ),
-                                const Text('Perempuan'),
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-              separatorBuilder: (context, index) => const Divider(
-                height: 0,
-              ),
-              itemCount: _data.length,
+            child: TabDetail(
+              data: _data,
+              tabBarView: _data
+                  .map(
+                    (e) => DetailKecamatan(
+                      id: e.id!,
+                    ),
+                  )
+                  .toList(),
             ),
-          ),
+          )
         ],
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class DataChart extends StatefulWidget {
@@ -256,14 +213,14 @@ class _DataChartState extends State<DataChart> {
       child: PieChart(
         dataMap: dataMap,
         animationDuration: const Duration(milliseconds: 800),
-        chartLegendSpacing: 42,
+        chartLegendSpacing: 52,
         chartRadius: MediaQuery.of(context).size.width / 1.3,
         colorList: _colorList,
         initialAngleInDegree: 45,
         ringStrokeWidth: 45,
         chartType: ChartType.ring,
         legendOptions: const LegendOptions(
-          showLegendsInRow: true,
+          showLegendsInRow: false,
           legendPosition: LegendPosition.bottom,
           showLegends: true,
           legendShape: BoxShape.rectangle,
@@ -278,6 +235,146 @@ class _DataChartState extends State<DataChart> {
           showChartValuesOutside: false,
           decimalPlaces: 0,
           chartValueStyle: TextStyle(fontSize: 12.0, color: Colors.black),
+        ),
+      ),
+    );
+  }
+}
+
+class DetailKecamatan extends StatefulWidget {
+  const DetailKecamatan({
+    Key? key,
+    required this.id,
+  }) : super(key: key);
+
+  final int id;
+
+  @override
+  State<DetailKecamatan> createState() => _DetailKecamatanState();
+}
+
+class _DetailKecamatanState extends State<DetailKecamatan> {
+  final ScrollController _controller = ScrollController();
+  final KecamatanPendidikanBloc _kecamatanPendidikanBloc =
+      KecamatanPendidikanBloc();
+
+  @override
+  void initState() {
+    super.initState();
+    _kecamatanPendidikanBloc.idSink.add(widget.id);
+    _kecamatanPendidikanBloc.getKecamatanPendidikan();
+  }
+
+  void _detailPemuda(List<PemudaPage>? pemuda) {
+    showAnimatedDialog(
+      context: context,
+      builder: (context) {
+        return _detailPemudaDialog(pemuda);
+      },
+      animationType: DialogTransitionType.slideFromBottomFade,
+      duration: const Duration(milliseconds: 500),
+    );
+  }
+
+  @override
+  void dispose() {
+    _kecamatanPendidikanBloc.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<ApiResponse<KecamatanPendidikanModel>>(
+      stream: _kecamatanPendidikanBloc.kecamatanPendidikanStream,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          switch (snapshot.data!.status) {
+            case Status.loading:
+              return LoadingSheet(
+                message: snapshot.data!.message,
+              );
+            case Status.error:
+              return ErrorSheet(
+                message: snapshot.data!.message,
+                button: false,
+              );
+            case Status.completed:
+              return ListView.separated(
+                controller: _controller,
+                padding: const EdgeInsets.all(18.0),
+                shrinkWrap: true,
+                itemBuilder: (context, i) {
+                  var data = snapshot.data!.data!.data![i];
+                  return ListTile(
+                    onTap: () => data.pemuda!.isNotEmpty
+                        ? _detailPemuda(data.pemuda)
+                        : null,
+                    title: Text('${data.namaKecamatan}'),
+                    trailing: Text(
+                      '${data.jumlah} org',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: kPrimaryDarkColor,
+                      ),
+                    ),
+                  );
+                },
+                separatorBuilder: (context, i) => const Divider(
+                  height: 8.0,
+                ),
+                itemCount: snapshot.data!.data!.data!.length,
+              );
+          }
+        }
+        return const SizedBox();
+      },
+    );
+  }
+
+  Widget _detailPemudaDialog(List<PemudaPage>? pemuda) {
+    return Dialog(
+      child: Container(
+        constraints:
+            BoxConstraints(maxHeight: SizeConfig.blockSizeVertical * 70),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 22.0, vertical: 12.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Data Pemuda',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                    color: Colors.grey,
+                  )
+                ],
+              ),
+            ),
+            Flexible(
+              child: ListView.builder(
+                padding: const EdgeInsets.only(
+                    left: 12.0, right: 12.0, top: 0.0, bottom: 22.0),
+                shrinkWrap: true,
+                itemBuilder: (context, i) {
+                  var data = pemuda![i];
+                  return ListTile(
+                    title: Text('${data.nama} (${data.umur})'),
+                    subtitle: Text(
+                        '${data.jenisKelamin}, ${data.pekerjaan!.namaPekerjaan}'),
+                  );
+                },
+                itemCount: pemuda!.length,
+              ),
+            ),
+          ],
         ),
       ),
     );

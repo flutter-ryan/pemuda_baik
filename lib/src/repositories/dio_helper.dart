@@ -7,7 +7,7 @@ class DioHelper {
 
   DioHelper() {
     BaseOptions options = BaseOptions(
-      baseUrl: 'http://e8d4-180-244-72-234.ngrok.io/api',
+      baseUrl: 'https://pemudabaik.com/api',
       headers: {
         "Accept": "application/json",
       },
@@ -130,21 +130,47 @@ class DioHelper {
   }
 
   dynamic _returnResponse(Response<dynamic>? response) {
-    final errorData = exceptionModelFromJson(response!.data);
-    switch (response.statusCode) {
-      case 401:
-      case 403:
-        throw UnauthorisedException(
-            '${response.statusCode} - Unauthorized\n${errorData.messages}');
-      case 404:
-        throw FetchDataException('${errorData.messages}');
-      case 422:
-        throw BadRequestException(
-            '${response.statusCode} - Unprocessable Entity\n${errorData.messages}');
-      case 500:
-      default:
-        throw FetchDataException(
-            '${response.statusCode} - Internal Server Error\nTerjadi kesalahan pada server.\nSilahkan menghubungi Administrator melalui email:\nrhean.achmad@gmail.com');
+    if (response!.data != null) {
+      final errorData = exceptionModelFromJson(response.data);
+      switch (response.statusCode) {
+        case 401:
+        case 403:
+          throw UnauthorisedException(
+              '${response.statusCode} - Unauthorized\n${errorData.messages}');
+        case 404:
+          if (errorData.messages!.isEmpty) {
+            throw FetchDataException(
+                '${response.statusCode} -${response.statusMessage}');
+          }
+          throw FetchDataException('${errorData.messages}');
+        case 422:
+          if (errorData.messages!.isEmpty) {
+            throw BadRequestException(
+                '${response.statusCode} - Unprocessable Entity\n${response.statusMessage}');
+          }
+          throw BadRequestException(
+              '${response.statusCode} - Unprocessable Entity\n${errorData.messages}');
+        case 500:
+        default:
+          throw FetchDataException(
+              '${response.statusCode} - Internal Server Error\nTerjadi kesalahan pada server.\nSilahkan menghubungi Administrator melalui email:\nrhean.achmad@gmail.com');
+      }
+    } else {
+      switch (response.statusCode) {
+        case 401:
+        case 403:
+          throw UnauthorisedException(
+              '${response.statusCode} - Unauthorized\n${response.statusMessage}');
+        case 404:
+          throw FetchDataException('${response.statusMessage}');
+        case 422:
+          throw BadRequestException(
+              '${response.statusCode} - Unprocessable Entity\n${response.statusMessage}');
+        case 500:
+        default:
+          throw FetchDataException(
+              '${response.statusCode} - Internal Server Error\nTerjadi kesalahan pada server.\nSilahkan menghubungi Administrator melalui email:\nrhean.achmad@gmail.com');
+      }
     }
   }
 }
@@ -160,7 +186,7 @@ class ExceptionModel {
   String? messages;
 
   factory ExceptionModel.fromJson(Map<String, dynamic> json) => ExceptionModel(
-        messages: json["message"],
+        messages: json["message"] ?? json["statusMessage"],
       );
 }
 

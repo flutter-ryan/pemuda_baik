@@ -29,7 +29,7 @@ class SavePemudaModel {
   int pekerjaan;
   String alamat;
   String nomorHp;
-  int agama;
+  String agama;
   int kelurahan;
   int kecamatan;
 

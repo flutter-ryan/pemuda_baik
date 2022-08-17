@@ -264,7 +264,7 @@ class _FormEditUserWidgetState extends State<FormEditUserWidget> {
   final _ulangiPassword = TextEditingController();
   final _profil = TextEditingController();
   int? selectedRole;
-  String? selectedId;
+  String selectedId = '';
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool _obscure = true;
@@ -286,7 +286,7 @@ class _FormEditUserWidgetState extends State<FormEditUserWidget> {
       _masterUserSaveBloc.passwordSink.add(_password.text);
       _masterUserSaveBloc.passwordConfirmaSink.add(_ulangiPassword.text);
       _masterUserSaveBloc.roleSink.add(selectedRole!);
-      _masterUserSaveBloc.pemudaSink.add(selectedId!);
+      _masterUserSaveBloc.pemudaSink.add(selectedId);
       _masterUserSaveBloc.updateUser();
       setState(() {
         _isLoading = true;
@@ -302,7 +302,7 @@ class _FormEditUserWidgetState extends State<FormEditUserWidget> {
       _masterUserSaveBloc.passwordSink.add(_password.text);
       _masterUserSaveBloc.passwordConfirmaSink.add(_ulangiPassword.text);
       _masterUserSaveBloc.roleSink.add(selectedRole!);
-      _masterUserSaveBloc.pemudaSink.add(selectedId!);
+      _masterUserSaveBloc.pemudaSink.add(selectedId);
       _masterUserSaveBloc.saveUser();
       setState(() {
         _isLoading = true;

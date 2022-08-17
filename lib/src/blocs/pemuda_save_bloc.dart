@@ -18,7 +18,7 @@ class PemudaSaveBloc {
   final BehaviorSubject<int> _pendidikanTerakhir = BehaviorSubject();
   final BehaviorSubject<String> _alamat = BehaviorSubject();
   final BehaviorSubject<String> _nomorHp = BehaviorSubject();
-  final BehaviorSubject<int> _agama = BehaviorSubject();
+  final BehaviorSubject<String> _agama = BehaviorSubject();
   final BehaviorSubject<int> _kecamatan = BehaviorSubject();
   final BehaviorSubject<int> _kelurahan = BehaviorSubject();
   StreamSink<int> get idSink => _id.sink;
@@ -31,7 +31,7 @@ class PemudaSaveBloc {
   StreamSink<int> get pendidikanTerakhirSink => _pendidikanTerakhir.sink;
   StreamSink<String> get alamatSink => _alamat.sink;
   StreamSink<String> get nomorHpSink => _nomorHp.sink;
-  StreamSink<int> get agamaSink => _agama.sink;
+  StreamSink<String> get agamaSink => _agama.sink;
   StreamSink<int> get kelurahanSink => _kelurahan.sink;
   StreamSink<int> get kecamatanSink => _kecamatan.sink;
 
@@ -71,6 +71,46 @@ class PemudaSaveBloc {
     );
     try {
       final res = await _repo.savePemuda(savePemudaModel);
+      if (_streamSavePemuda!.isClosed) return;
+      savePemudaSink.add(ApiResponse.completed(res));
+    } catch (e) {
+      if (_streamSavePemuda!.isClosed) return;
+      savePemudaSink.add(ApiResponse.error(e.toString()));
+    }
+  }
+
+  Future<void> updatePemuda() async {
+    _streamSavePemuda = StreamController();
+    final id = _id.value;
+    final nik = _nik.value;
+    final nama = _nama.value;
+    final tanggalLahir = _tanggalLahir.value;
+    final jenisKelamin = _jenisKelaimn.value;
+    final statusNikah = _statusNikah.value;
+    final pekerjaan = _pekerjaan.value;
+    final pendidikanTerakhir = _pendidikanTerakhir.value;
+    final alamat = _alamat.value;
+    final nomorHp = _nomorHp.value;
+    final agama = _agama.value;
+    final kecamatan = _kecamatan.value;
+    final kelurahan = _kelurahan.value;
+    savePemudaSink.add(ApiResponse.loading('Memuat...'));
+    SavePemudaModel savePemudaModel = SavePemudaModel(
+      nik: nik,
+      nama: nama,
+      tanggalLahir: tanggalLahir,
+      jenisKelamin: jenisKelamin,
+      statusNikah: statusNikah,
+      agama: agama,
+      pendidikanTerakhir: pendidikanTerakhir,
+      pekerjaan: pekerjaan,
+      alamat: alamat,
+      nomorHp: nomorHp,
+      kecamatan: kecamatan,
+      kelurahan: kelurahan,
+    );
+    try {
+      final res = await _repo.updatePemuda(savePemudaModel, id);
       if (_streamSavePemuda!.isClosed) return;
       savePemudaSink.add(ApiResponse.completed(res));
     } catch (e) {

@@ -46,29 +46,41 @@ class _SplashPageState extends State<SplashPage> {
         backgroundColor: kSecondaryColor,
         body: Stack(
           children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  height: 180,
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('images/logo_bantaeng.png'),
-                    ),
+            SizedBox(
+              width: double.infinity,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    height: 180,
+                    width: 180,
+                    decoration: BoxDecoration(
+                        image: const DecorationImage(
+                          image: AssetImage('images/pemuda_logo.png'),
+                        ),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 12,
+                            offset: Offset(2.0, 2.0),
+                          )
+                        ]),
                   ),
-                ),
-                const SizedBox(
-                  height: 12,
-                ),
-                const Text(
-                  'Pemuda Baik',
-                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
-                ),
-                const Text(
-                  'Kabupaten Bantaeng',
-                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
-                )
-              ],
+                  const SizedBox(
+                    height: 12,
+                  ),
+                  const Text(
+                    'Pemuda Baik',
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+                  ),
+                  const Text(
+                    'Kabupaten Bantaeng',
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+                  )
+                ],
+              ),
             ),
             Align(
               alignment: Alignment.bottomCenter,

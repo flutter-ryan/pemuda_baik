@@ -4,7 +4,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:pemuda_baik/src/blocs/bursa_bloc.dart';
 import 'package:pemuda_baik/src/config/color_style.dart';
 import 'package:pemuda_baik/src/models/bursa_model.dart';
-import 'package:pemuda_baik/src/models/bursa_save_model.dart';
 import 'package:pemuda_baik/src/pages/input_bursa_page.dart';
 import 'package:pemuda_baik/src/pages/widget/error_box.dart';
 import 'package:pemuda_baik/src/pages/widget/search_input_widget.dart';

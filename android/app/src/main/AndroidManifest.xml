@@ -5,6 +5,7 @@
         android:label="Admin Pemuda"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_circle"
         android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"

@@ -9,6 +9,13 @@ class PemudaSaveRepo {
     return responseSavePemudaModelFromJson(response);
   }
 
+  Future<ResponseSavePemudaModel> updatePemuda(
+      SavePemudaModel savePemudaModel, int id) async {
+    final response =
+        await dio.put('/v1/pemuda/$id', savePemudaModelToJson(savePemudaModel));
+    return responseSavePemudaModelFromJson(response);
+  }
+
   Future<ResponseSavePemudaModel> deletePemuda(int id) async {
     final response = await dio.delete('/v1/pemuda/$id');
     return responseSavePemudaModelFromJson(response);

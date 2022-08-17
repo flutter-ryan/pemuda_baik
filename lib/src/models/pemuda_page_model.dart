@@ -33,8 +33,10 @@ class PemudaPage {
     this.nomorKtp,
     this.nama,
     this.tanggalLahir,
+    this.umur,
     this.jenisKelamin,
     this.statusNikah,
+    this.intStatus,
     this.agama,
     this.alamat,
     this.nomorKontak,
@@ -48,9 +50,11 @@ class PemudaPage {
   String? noreg;
   String? nomorKtp;
   String? nama;
-  DateTime? tanggalLahir;
+  String? tanggalLahir;
+  String? umur;
   String? jenisKelamin;
   String? statusNikah;
+  int? intStatus;
   String? agama;
   String? alamat;
   String? nomorKontak;
@@ -64,9 +68,11 @@ class PemudaPage {
         noreg: json["noreg"],
         nomorKtp: json["nomor_ktp"],
         nama: json["nama"],
-        tanggalLahir: DateTime.parse(json["tanggal_lahir"]),
+        tanggalLahir: json["tanggal_lahir"],
+        umur: json["umur"],
         jenisKelamin: json["jenis_kelamin"],
         statusNikah: json["status_nikah"],
+        intStatus: json["int_status"],
         agama: json["agama"],
         alamat: json["alamat"],
         nomorKontak: json["nomor_kontak"],

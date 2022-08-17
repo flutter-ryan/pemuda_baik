@@ -22,7 +22,12 @@ import 'package:pemuda_baik/src/pages/widget/input_form_widget.dart';
 import 'package:pemuda_baik/src/pages/widget/loading_dialog_widget.dart';
 
 class InputPemudaPage extends StatefulWidget {
-  const InputPemudaPage({Key? key}) : super(key: key);
+  const InputPemudaPage({
+    Key? key,
+    this.data,
+  }) : super(key: key);
+
+  final PemudaPage? data;
 
   @override
   State<InputPemudaPage> createState() => _InputPemudaPageState();
@@ -47,9 +52,17 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
   int? selectedRadioTile;
   int? selectedRadioTileNikah;
   int? selectedRadioTilePekerjaan;
-  int? selectedRadioTileAgama;
+  String? selectedRadioTileAgama;
   final DateTime _selectedDate = DateTime(2000, 1, 1);
   final DateFormat _tanggal = DateFormat('yyyy-MM-dd');
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.data != null) {
+      _edit();
+    }
+  }
 
   bool validateAndSave() {
     var formState = _formKey.currentState;
@@ -57,6 +70,29 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
       return true;
     }
     return false;
+  }
+
+  void _edit() {
+    var data = widget.data!;
+    _nik.text = data.nomorKtp!;
+    _nama.text = data.nama!;
+    _tanggalLahir.text = data.tanggalLahir!;
+    _kecamatan.text = data.kecamatan!.namaKecamatan!;
+    _kelurahan.text = data.kelurahan!.namaKelurahan!;
+    _pendidkanTerakhir.text = data.pendidikan!.namaPendidikan!;
+    _pekerjaan.text = data.pekerjaan!.namaPekerjaan!;
+    _alamat.text = data.alamat!;
+    _nomorHp.text = data.nomorKontak!;
+    setState(() {
+      selectedPendidikan = data.pendidikan!.id;
+      selectedPekerjaan = data.pekerjaan!.id;
+      selectedKecamatan = data.kecamatan!.id;
+      selectedKelurahan = data.kelurahan!.id;
+      selectedRadioTile = data.jenisKelamin == 'Laki-laki' ? 1 : 2;
+      selectedRadioTileNikah = data.intStatus;
+      selectedRadioTilePekerjaan = data.pekerjaan!.id;
+      selectedRadioTileAgama = data.agama;
+    });
   }
 
   void _simpan() {
@@ -75,6 +111,39 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
       _pemudaSaveBloc.kelurahanSink.add(selectedKelurahan!);
       _pemudaSaveBloc.kecamatanSink.add(selectedKecamatan!);
       _pemudaSaveBloc.savePemuda();
+      showAnimatedDialog(
+        context: context,
+        builder: (context) {
+          return _streamSavePemuda();
+        },
+        animationType: DialogTransitionType.slideFromBottomFade,
+        duration: const Duration(milliseconds: 300),
+      ).then((value) {
+        if (value != null) {
+          var data = value as PemudaPage;
+          Navigator.pop(context, data);
+        }
+      });
+    }
+  }
+
+  void _update() {
+    if (validateAndSave()) {
+      SystemChannels.textInput.invokeMethod('TextInput.hide');
+      _pemudaSaveBloc.idSink.add(widget.data!.id!);
+      _pemudaSaveBloc.nikSink.add(_nik.text);
+      _pemudaSaveBloc.namaSink.add(_nama.text);
+      _pemudaSaveBloc.tanggalLahirSink.add(_tanggalLahir.text);
+      _pemudaSaveBloc.jenisKelaminSink.add(selectedRadioTile!);
+      _pemudaSaveBloc.statusNikahSink.add(selectedRadioTileNikah!);
+      _pemudaSaveBloc.pekerjaanSink.add(selectedPekerjaan!);
+      _pemudaSaveBloc.agamaSink.add(selectedRadioTileAgama!);
+      _pemudaSaveBloc.pendidikanTerakhirSink.add(selectedPendidikan!);
+      _pemudaSaveBloc.alamatSink.add(_alamat.text);
+      _pemudaSaveBloc.nomorHpSink.add(_nomorHp.text);
+      _pemudaSaveBloc.kelurahanSink.add(selectedKelurahan!);
+      _pemudaSaveBloc.kecamatanSink.add(selectedKecamatan!);
+      _pemudaSaveBloc.updatePemuda();
       showAnimatedDialog(
         context: context,
         builder: (context) {
@@ -504,12 +573,12 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
                     child: RadioListTile(
                       dense: true,
                       contentPadding: EdgeInsets.zero,
-                      value: 1,
+                      value: "Islam",
                       groupValue: selectedRadioTileAgama,
                       title: const Text("Islam"),
                       onChanged: (val) {
                         setState(() {
-                          selectedRadioTileAgama = val as int;
+                          selectedRadioTileAgama = val as String;
                         });
                       },
                       activeColor: Colors.black,
@@ -530,12 +599,12 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
                     child: RadioListTile(
                       dense: true,
                       contentPadding: EdgeInsets.zero,
-                      value: 2,
+                      value: "Protestan",
                       groupValue: selectedRadioTileAgama,
                       title: const Text("Protestan"),
                       onChanged: (val) {
                         setState(() {
-                          selectedRadioTileAgama = val as int;
+                          selectedRadioTileAgama = val as String;
                         });
                       },
                       activeColor: Colors.black,
@@ -560,12 +629,12 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
                     child: RadioListTile(
                       dense: true,
                       contentPadding: EdgeInsets.zero,
-                      value: 3,
+                      value: "Katolik",
                       groupValue: selectedRadioTileAgama,
                       title: const Text("Katolik"),
                       onChanged: (val) {
                         setState(() {
-                          selectedRadioTileAgama = val as int;
+                          selectedRadioTileAgama = val as String;
                         });
                       },
                       activeColor: Colors.black,
@@ -586,12 +655,12 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
                     child: RadioListTile(
                       dense: true,
                       contentPadding: EdgeInsets.zero,
-                      value: 4,
+                      value: "Hindu",
                       groupValue: selectedRadioTileAgama,
                       title: const Text("Hindu"),
                       onChanged: (val) {
                         setState(() {
-                          selectedRadioTileAgama = val as int;
+                          selectedRadioTileAgama = val as String;
                         });
                       },
                       activeColor: Colors.black,
@@ -616,12 +685,12 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
                     child: RadioListTile(
                       dense: true,
                       contentPadding: EdgeInsets.zero,
-                      value: 5,
+                      value: "Budha",
                       groupValue: selectedRadioTileAgama,
                       title: const Text("Budha"),
                       onChanged: (val) {
                         setState(() {
-                          selectedRadioTileAgama = val as int;
+                          selectedRadioTileAgama = val as String;
                         });
                       },
                       activeColor: Colors.black,
@@ -739,12 +808,14 @@ class _InputPemudaPageState extends State<InputPemudaPage> {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: _simpan,
+                onPressed: widget.data == null ? _simpan : _update,
                 style: ElevatedButton.styleFrom(
                     primary: kPrimaryDarkColor,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.0))),
-                child: const Text('SIMPAN'),
+                child: widget.data == null
+                    ? const Text('SIMPAN')
+                    : const Text('UPDATE'),
               ),
             )
           ],

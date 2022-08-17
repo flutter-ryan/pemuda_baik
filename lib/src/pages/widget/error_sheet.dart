@@ -4,9 +4,11 @@ class ErrorSheet extends StatelessWidget {
   const ErrorSheet({
     Key? key,
     this.message,
+    this.button = true,
   }) : super(key: key);
 
   final String? message;
+  final bool button;
 
   @override
   Widget build(BuildContext context) {
@@ -35,19 +37,21 @@ class ErrorSheet extends StatelessWidget {
               style: const TextStyle(fontSize: 16, color: Colors.grey),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(
-              height: 32,
-            ),
-            SizedBox(
-              height: 45,
-              width: 150,
-              child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.red,
-                  ),
-                  child: const Text('Tutup')),
-            )
+            if (button)
+              const SizedBox(
+                height: 32,
+              ),
+            if (button)
+              SizedBox(
+                height: 45,
+                width: 150,
+                child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.red,
+                    ),
+                    child: const Text('Tutup')),
+              )
           ],
         ),
       ),

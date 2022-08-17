@@ -19,7 +19,8 @@ class KelurahanChart extends StatefulWidget {
   State<KelurahanChart> createState() => _KelurahanChartState();
 }
 
-class _KelurahanChartState extends State<KelurahanChart> {
+class _KelurahanChartState extends State<KelurahanChart>
+    with AutomaticKeepAliveClientMixin {
   final DashboardChartBloc bloc = DashboardChartBloc();
   List<JenisData> _data = [];
 
@@ -47,6 +48,7 @@ class _KelurahanChartState extends State<KelurahanChart> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     SizeConfig().init(context);
     return Container(
       constraints: const BoxConstraints(minHeight: 200),
@@ -218,6 +220,9 @@ class _KelurahanChartState extends State<KelurahanChart> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class DataChart extends StatefulWidget {
