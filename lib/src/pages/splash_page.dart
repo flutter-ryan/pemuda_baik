@@ -56,7 +56,7 @@ class _SplashPageState extends State<SplashPage> {
                     width: 180,
                     decoration: BoxDecoration(
                         image: const DecorationImage(
-                          image: AssetImage('images/pemuda_logo.png'),
+                          image: AssetImage('images/launcher.png'),
                         ),
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(32),

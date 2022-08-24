@@ -93,7 +93,7 @@ class _PendidikanChartState extends State<PendidikanChart>
                 icon: const Icon(Icons.refresh_rounded),
               ),
               IconButton(
-                onPressed: _detail,
+                onPressed: _data.isNotEmpty ? _detail : null,
                 color: Colors.blue,
                 icon: const Icon(Icons.info_outline_rounded),
               )
@@ -257,6 +257,7 @@ class _DetailKecamatanState extends State<DetailKecamatan> {
   final ScrollController _controller = ScrollController();
   final KecamatanPendidikanBloc _kecamatanPendidikanBloc =
       KecamatanPendidikanBloc();
+  int total = 0;
 
   @override
   void initState() {
@@ -299,30 +300,43 @@ class _DetailKecamatanState extends State<DetailKecamatan> {
                 button: false,
               );
             case Status.completed:
-              return ListView.separated(
-                controller: _controller,
-                padding: const EdgeInsets.all(18.0),
-                shrinkWrap: true,
-                itemBuilder: (context, i) {
-                  var data = snapshot.data!.data!.data![i];
-                  return ListTile(
-                    onTap: () => data.pemuda!.isNotEmpty
-                        ? _detailPemuda(data.pemuda)
-                        : null,
-                    title: Text('${data.namaKecamatan}'),
-                    trailing: Text(
-                      '${data.jumlah} org',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: kPrimaryDarkColor,
+              return Column(
+                children: [
+                  Expanded(
+                    child: ListView.separated(
+                      controller: _controller,
+                      padding: const EdgeInsets.all(18.0),
+                      shrinkWrap: true,
+                      itemBuilder: (context, i) {
+                        var data = snapshot.data!.data!.data![i];
+                        return ListTile(
+                          onTap: () => data.pemuda!.isNotEmpty
+                              ? _detailPemuda(data.pemuda)
+                              : null,
+                          title: Text('${data.namaKecamatan}'),
+                          trailing: Text(
+                            '${data.jumlah} org',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: kPrimaryDarkColor,
+                            ),
+                          ),
+                        );
+                      },
+                      separatorBuilder: (context, i) => const Divider(
+                        height: 8.0,
                       ),
+                      itemCount: snapshot.data!.data!.data!.length,
                     ),
-                  );
-                },
-                separatorBuilder: (context, i) => const Divider(
-                  height: 8.0,
-                ),
-                itemCount: snapshot.data!.data!.data!.length,
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(18.0),
+                    child: ListTile(
+                      title: const Text('TOTAL'),
+                      trailing: Text('${snapshot.data!.data!.total}'),
+                    ),
+                  )
+                ],
               );
           }
         }

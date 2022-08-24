@@ -7,16 +7,19 @@ class KecamatanPendidikanModel {
   KecamatanPendidikanModel({
     this.data,
     this.message,
+    this.total = 0,
   });
 
   List<KecamatanPendidikan>? data;
   String? message;
+  int total;
 
   factory KecamatanPendidikanModel.fromJson(Map<String, dynamic> json) =>
       KecamatanPendidikanModel(
         data: List<KecamatanPendidikan>.from(
             json["data"].map((x) => KecamatanPendidikan.fromJson(x))),
         message: json["message"],
+        total: json["total"],
       );
 }
 
