@@ -12,7 +12,7 @@ class KecamatanPendidikanModel {
 
   List<KecamatanPendidikan>? data;
   String? message;
-  int total;
+  int? total;
 
   factory KecamatanPendidikanModel.fromJson(Map<String, dynamic> json) =>
       KecamatanPendidikanModel(

@@ -37,36 +37,36 @@ class _RootpageState extends State<Rootpage> {
       PersistentBottomNavBarItem(
         icon: const FaIcon(
           FontAwesomeIcons.house,
-          size: 20.0,
         ),
         title: "Home",
+        iconSize: 20,
         activeColorPrimary: kPrimaryDarkColor,
         inactiveColorPrimary: Colors.grey,
       ),
       PersistentBottomNavBarItem(
         icon: const FaIcon(
           FontAwesomeIcons.database,
-          size: 20.0,
         ),
-        title: ("Pemuda"),
+        title: "Pemuda",
+        iconSize: 20,
         activeColorPrimary: kPrimaryDarkColor,
         inactiveColorPrimary: Colors.grey,
       ),
       PersistentBottomNavBarItem(
         icon: const FaIcon(
           FontAwesomeIcons.solidNewspaper,
-          size: 20.0,
         ),
-        title: ("Artikel"),
+        title: "Artikel",
+        iconSize: 20,
         activeColorPrimary: kPrimaryDarkColor,
         inactiveColorPrimary: Colors.grey,
       ),
       PersistentBottomNavBarItem(
         icon: const FaIcon(
           FontAwesomeIcons.solidCalendarPlus,
-          size: 20.0,
         ),
-        title: ("Bursa"),
+        title: "Bursa",
+        iconSize: 20,
         activeColorPrimary: kPrimaryDarkColor,
         inactiveColorPrimary: Colors.grey,
       ),

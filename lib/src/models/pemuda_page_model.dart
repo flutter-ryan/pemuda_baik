@@ -22,7 +22,7 @@ class PemudaPageModel {
         data: List<PemudaPage>.from(
             json["data"].map((x) => PemudaPage.fromJson(x))),
         currentPage: json["current_page"],
-        totalPage: json["totalPage"],
+        totalPage: json["total_page"],
       );
 }
 

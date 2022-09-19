@@ -14,7 +14,7 @@ class PemudaBaik extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Pemuda Baik',
+      title: 'Admin Pemuda Baik',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         textTheme: GoogleFonts.poppinsTextTheme(

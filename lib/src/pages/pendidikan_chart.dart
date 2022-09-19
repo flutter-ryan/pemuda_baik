@@ -93,7 +93,7 @@ class _PendidikanChartState extends State<PendidikanChart>
                 icon: const Icon(Icons.refresh_rounded),
               ),
               IconButton(
-                onPressed: _data.isNotEmpty ? _detail : null,
+                onPressed: _detail,
                 color: Colors.blue,
                 icon: const Icon(Icons.info_outline_rounded),
               )

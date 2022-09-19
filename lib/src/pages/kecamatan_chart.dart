@@ -294,30 +294,43 @@ class _DetailPendidikanState extends State<DetailPendidikan> {
                 button: false,
               );
             case Status.completed:
-              return ListView.separated(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(18.0),
-                shrinkWrap: true,
-                itemBuilder: (context, i) {
-                  var data = snapshot.data!.data!.data![i];
-                  return ListTile(
-                    onTap: () => data.pemuda!.isNotEmpty
-                        ? _detailPemuda(data.pemuda)
-                        : null,
-                    title: Text('${data.namaPendidikan}'),
-                    trailing: Text(
-                      '${data.jumlah} org',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: kPrimaryDarkColor,
+              return Column(
+                children: [
+                  Expanded(
+                    child: ListView.separated(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(18.0),
+                      shrinkWrap: true,
+                      itemBuilder: (context, i) {
+                        var data = snapshot.data!.data!.data![i];
+                        return ListTile(
+                          onTap: () => data.pemuda!.isNotEmpty
+                              ? _detailPemuda(data.pemuda)
+                              : null,
+                          title: Text('${data.namaPendidikan}'),
+                          trailing: Text(
+                            '${data.jumlah} org',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: kPrimaryDarkColor,
+                            ),
+                          ),
+                        );
+                      },
+                      separatorBuilder: (context, i) => const Divider(
+                        height: 8.0,
                       ),
+                      itemCount: snapshot.data!.data!.data!.length,
                     ),
-                  );
-                },
-                separatorBuilder: (context, i) => const Divider(
-                  height: 8.0,
-                ),
-                itemCount: snapshot.data!.data!.data!.length,
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(18.0),
+                    child: ListTile(
+                      title: const Text('TOTAL'),
+                      trailing: Text('${snapshot.data!.data!.total}'),
+                    ),
+                  )
+                ],
               );
           }
         }

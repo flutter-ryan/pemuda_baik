@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:pemuda_baik/src/blocs/auth_bloc.dart';
 import 'package:pemuda_baik/src/blocs/login_bloc.dart';
 import 'package:pemuda_baik/src/config/color_style.dart';
+import 'package:pemuda_baik/src/config/size_config.dart';
 import 'package:pemuda_baik/src/models/login_model.dart';
 import 'package:pemuda_baik/src/repositories/responseApi/api_response.dart';
 import 'package:pemuda_baik/src/pages/widget/input_form_widget.dart';
@@ -161,39 +162,47 @@ class _LoginPageState extends State<LoginPage> {
             case Status.error:
               return Container(
                 color: Colors.black54,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 22.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.warning_rounded,
-                        size: 52,
-                        color: Colors.red,
-                      ),
-                      const SizedBox(
-                        height: 12.0,
-                      ),
-                      Text(
-                        snapshot.data!.message,
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 16.0),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(
-                        height: 12.0,
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(
-                            () {
-                              _isLoading = false;
-                            },
-                          );
-                        },
-                        child: const Text('Coba lagi'),
-                      )
-                    ],
+                child: Center(
+                  child: Container(
+                    width: SizeConfig.blockSizeHorizontal * 80,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 22.0, vertical: 18.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.warning_rounded,
+                          size: 52,
+                          color: Colors.red,
+                        ),
+                        const SizedBox(
+                          height: 12.0,
+                        ),
+                        Text(
+                          snapshot.data!.message,
+                          style: const TextStyle(fontSize: 16.0),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(
+                          height: 12.0,
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(
+                              () {
+                                _isLoading = false;
+                              },
+                            );
+                          },
+                          child: const Text('Coba lagi'),
+                        )
+                      ],
+                    ),
                   ),
                 ),
               );
