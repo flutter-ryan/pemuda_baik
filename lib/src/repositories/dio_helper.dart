@@ -7,7 +7,7 @@ class DioHelper {
 
   DioHelper() {
     BaseOptions options = BaseOptions(
-      baseUrl: 'https://pemudabaik.com/api',
+      baseUrl: 'http://613d-180-251-162-209.ngrok.io/api',
       headers: {
         "Accept": "application/json",
       },
